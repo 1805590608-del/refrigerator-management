@@ -172,7 +172,9 @@ final class AddEditFoodViewModel: ObservableObject {
 
     @discardableResult
     func save(advanceDays: [Int]) throws -> Bool {
-        guard let repository else { return false }
+        guard let repository else {
+            throw SaveError.repositoryUnavailable
+        }
         return try save(to: repository, advanceDays: advanceDays)
     }
 
@@ -226,5 +228,13 @@ final class AddEditFoodViewModel: ObservableObject {
         photoData = draft.photoData
         notes = draft.notes
         selectedImage = draft.photoData.flatMap { UIImage(data: $0) }
+    }
+
+    private enum SaveError: LocalizedError {
+        case repositoryUnavailable
+
+        var errorDescription: String? {
+            NSLocalizedString("error.repositoryUnavailable", comment: "")
+        }
     }
 }
