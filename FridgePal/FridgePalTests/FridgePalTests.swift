@@ -191,3 +191,105 @@ final class HistoryRecordTests: XCTestCase {
         XCTAssertEqual(record.categoryEnum, .dairy)
     }
 }
+
+// MARK: - Repeat Entry Draft Tests
+
+final class FoodFormDraftTests: XCTestCase {
+
+    func testFoodItemDraftCopiesEveryEditableFieldWithoutMutatingSource() {
+        let purchaseDate = Date(timeIntervalSince1970: 1_700_000_000)
+        let expirationDate = Date(timeIntervalSince1970: 1_700_604_800)
+        let photoData = Data([0x01, 0x02, 0x03])
+        let source = FoodItem(
+            name: "Greek Yogurt",
+            category: .dairy,
+            storageLocation: .fridge,
+            quantity: 4,
+            unit: "pack",
+            purchaseDate: purchaseDate,
+            expirationDate: expirationDate,
+            photoData: photoData,
+            notes: "Plain"
+        )
+
+        var draft = FoodFormDraft(item: source)
+
+        XCTAssertEqual(draft.name, source.name)
+        XCTAssertEqual(draft.category, source.categoryEnum)
+        XCTAssertEqual(draft.storageLocation, source.storageLocationEnum)
+        XCTAssertEqual(draft.quantity, source.quantity)
+        XCTAssertEqual(draft.unit, source.unit)
+        XCTAssertEqual(draft.purchaseDate, source.purchaseDate)
+        XCTAssertEqual(draft.expirationDate, expirationDate)
+        XCTAssertTrue(draft.hasExpirationDate)
+        XCTAssertEqual(draft.photoData, source.photoData)
+        XCTAssertEqual(draft.notes, source.notes)
+
+        draft.name = "Vanilla Yogurt"
+        draft.quantity = 2
+        draft.notes = "Edited copy"
+        let repeatedItem = draft.makeFoodItem()
+
+        XCTAssertEqual(source.name, "Greek Yogurt")
+        XCTAssertEqual(source.quantity, 4)
+        XCTAssertEqual(source.notes, "Plain")
+        XCTAssertNotEqual(repeatedItem.id, source.id)
+        XCTAssertEqual(repeatedItem.name, "Vanilla Yogurt")
+        XCTAssertEqual(repeatedItem.categoryEnum, .dairy)
+        XCTAssertEqual(repeatedItem.storageLocationEnum, .fridge)
+        XCTAssertEqual(repeatedItem.quantity, 2)
+        XCTAssertEqual(repeatedItem.unit, "pack")
+        XCTAssertEqual(repeatedItem.purchaseDate, purchaseDate)
+        XCTAssertEqual(repeatedItem.expirationDate, expirationDate)
+        XCTAssertEqual(repeatedItem.photoData, photoData)
+        XCTAssertEqual(repeatedItem.notes, "Edited copy")
+        XCTAssertEqual(repeatedItem.statusEnum, .active)
+    }
+
+    func testHistoryDraftCreatesDistinctActiveItemAndLeavesRecordUnchanged() {
+        let source = FoodItem(
+            name: "Leftovers",
+            category: .cooked,
+            storageLocation: .freezer,
+            quantity: 2,
+            unit: "box",
+            purchaseDate: Date(timeIntervalSince1970: 1_710_000_000),
+            expirationDate: nil,
+            photoData: Data([0x04, 0x05]),
+            notes: "Pasta"
+        )
+        let record = HistoryRecord(from: source, finalStatus: .eaten)
+
+        var draft = FoodFormDraft(historyRecord: record)
+
+        XCTAssertEqual(draft.name, record.foodName)
+        XCTAssertEqual(draft.category, .cooked)
+        XCTAssertEqual(draft.storageLocation, .freezer)
+        XCTAssertEqual(draft.quantity, record.quantity)
+        XCTAssertEqual(draft.unit, record.unit)
+        XCTAssertEqual(draft.purchaseDate, record.purchaseDate)
+        XCTAssertFalse(draft.hasExpirationDate)
+        XCTAssertEqual(draft.photoData, record.photoData)
+        XCTAssertEqual(draft.notes, record.notes)
+
+        draft.storageLocation = .fridge
+        draft.hasExpirationDate = true
+        draft.expirationDate = Date(timeIntervalSince1970: 1_720_000_000)
+        let repeatedItem = draft.makeFoodItem()
+
+        XCTAssertEqual(record.storageLocation, StorageLocation.freezer.rawValue)
+        XCTAssertNil(record.expirationDate)
+        XCTAssertEqual(record.finalStatusEnum, .eaten)
+        XCTAssertNotEqual(repeatedItem.id, record.id)
+        XCTAssertEqual(repeatedItem.name, record.foodName)
+        XCTAssertEqual(repeatedItem.categoryEnum, .cooked)
+        XCTAssertEqual(repeatedItem.storageLocationEnum, .fridge)
+        XCTAssertEqual(repeatedItem.quantity, record.quantity)
+        XCTAssertEqual(repeatedItem.unit, record.unit)
+        XCTAssertEqual(repeatedItem.purchaseDate, record.purchaseDate)
+        XCTAssertEqual(repeatedItem.expirationDate, draft.expirationDate)
+        XCTAssertEqual(repeatedItem.photoData, record.photoData)
+        XCTAssertEqual(repeatedItem.notes, record.notes)
+        XCTAssertEqual(repeatedItem.statusEnum, .active)
+    }
+}

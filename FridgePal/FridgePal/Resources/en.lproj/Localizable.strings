@@ -98,6 +98,10 @@
 "button.markDiscarded" = "Mark as Discarded";
 "button.increaseQuantity" = "Increase Quantity";
 "button.decreaseQuantity" = "Decrease Quantity";
+"button.addAgain" = "Add Again";
+
+/* Accessibility */
+"accessibility.addAgainFormat" = "Add %@ again";
 
 /* Photo */
 "photo.sourceTitle" = "Choose Photo Source";

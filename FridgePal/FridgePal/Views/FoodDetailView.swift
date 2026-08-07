@@ -8,6 +8,7 @@ struct FoodDetailView: View {
     let item: FoodItem
 
     @State private var showEdit = false
+    @State private var showAddAgain = false
     @State private var showDeleteAlert = false
 
     var body: some View {
@@ -41,6 +42,9 @@ struct FoodDetailView: View {
         }
         .sheet(isPresented: $showEdit) {
             AddEditFoodView(item: item)
+        }
+        .sheet(isPresented: $showAddAgain) {
+            AddEditFoodView(prefill: FoodFormDraft(item: item))
         }
         .alert("alert.deleteTitle", isPresented: $showDeleteAlert) {
             Button("button.delete", role: .destructive) { deleteItem() }
@@ -165,6 +169,22 @@ struct FoodDetailView: View {
 
     private var actionButtons: some View {
         VStack(spacing: AppSpacing.medium) {
+            Button {
+                showAddAgain = true
+            } label: {
+                Label("button.addAgain", systemImage: "plus.square.on.square")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .accessibilityLabel(
+                Text(
+                    String(
+                        format: NSLocalizedString("accessibility.addAgainFormat", comment: ""),
+                        item.name
+                    )
+                )
+            )
+
             HStack(spacing: AppSpacing.medium) {
                 Button {
                     archive(as: .eaten)

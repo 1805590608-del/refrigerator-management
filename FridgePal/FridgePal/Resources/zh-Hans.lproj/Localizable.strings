@@ -98,6 +98,10 @@
 "button.markDiscarded" = "标记已丢弃";
 "button.increaseQuantity" = "增加数量";
 "button.decreaseQuantity" = "减少数量";
+"button.addAgain" = "再次添加";
+
+/* 辅助功能 */
+"accessibility.addAgainFormat" = "再次添加“%@”";
 
 /* 照片 */
 "photo.sourceTitle" = "选择照片来源";

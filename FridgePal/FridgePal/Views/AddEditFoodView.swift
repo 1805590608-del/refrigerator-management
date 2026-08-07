@@ -7,23 +7,7 @@ struct AddEditFoodView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage("reminderDays") private var reminderDaysRaw: String = "1,3,7"
 
-    let item: FoodItem?
-
-    @State private var name: String = ""
-    @State private var category: FoodCategory = .other
-    @State private var storageLocation: StorageLocation = .fridge
-    @State private var quantity: Double = 1
-    @State private var unit: String = "item"
-    @State private var purchaseDate: Date = Date()
-    @State private var expirationDate: Date = Calendar.current.date(byAdding: .day, value: 7, to: Date())!
-    @State private var hasExpirationDate: Bool = true
-    @State private var notes: String = ""
-    @State private var selectedImage: UIImage? = nil
-    @State private var photoData: Data? = nil
-
-    // Validation
-    @State private var nameError: String? = nil
-    @State private var quantityError: String? = nil
+    @StateObject private var viewModel: AddEditFoodViewModel
 
     // Photo picker
     @State private var showPhotoOptions = false
@@ -31,9 +15,11 @@ struct AddEditFoodView: View {
     @State private var showPhotoPicker = false
     @State private var selectedPhotoItem: PhotosPickerItem? = nil
 
-    // Save state
-    @State private var isSaving = false
-    @State private var saveError: String? = nil
+    init(item: FoodItem? = nil, prefill: FoodFormDraft? = nil) {
+        _viewModel = StateObject(
+            wrappedValue: AddEditFoodViewModel(item: item, prefill: prefill)
+        )
+    }
 
     private var reminderDays: [Int] {
         reminderDaysRaw.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
@@ -53,7 +39,7 @@ struct AddEditFoodView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle(item == nil ? "nav.addFood" : "nav.editFood")
+            .navigationTitle(viewModel.isEditing ? "nav.editFood" : "nav.addFood")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -62,32 +48,31 @@ struct AddEditFoodView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("button.save") { save() }
                         .fontWeight(.semibold)
-                        .disabled(isSaving)
+                        .disabled(viewModel.isSaving)
                 }
             }
             .alert("alert.errorTitle", isPresented: Binding(
-                get: { saveError != nil },
-                set: { if !$0 { saveError = nil } }
+                get: { viewModel.saveError != nil },
+                set: { if !$0 { viewModel.saveError = nil } }
             )) {
-                Button("button.ok") { saveError = nil }
+                Button("button.ok") { viewModel.saveError = nil }
             } message: {
-                Text(saveError ?? "")
+                Text(viewModel.saveError ?? "")
             }
-            .onAppear { populateFields() }
             .confirmationDialog("photo.sourceTitle", isPresented: $showPhotoOptions, titleVisibility: .visible) {
                 Button("photo.camera") { requestCameraAccess() }
                 Button("photo.library") { showPhotoPicker = true }
-                if selectedImage != nil {
+                if viewModel.selectedImage != nil {
                     Button("photo.remove", role: .destructive) { removePhoto() }
                 }
                 Button("button.cancel", role: .cancel) {}
             }
             .fullScreenCover(isPresented: $showCamera) {
-                CameraView(image: $selectedImage)
+                CameraView(image: $viewModel.selectedImage)
                     .ignoresSafeArea()
                     .onDisappear {
-                        if let img = selectedImage {
-                            photoData = ImageService.compress(img)
+                        if let image = viewModel.selectedImage {
+                            viewModel.setImage(image)
                         }
                     }
             }
@@ -96,8 +81,7 @@ struct AddEditFoodView: View {
                 Task {
                     if let data = try? await newItem?.loadTransferable(type: Data.self),
                        let uiImage = UIImage(data: data) {
-                        selectedImage = uiImage
-                        photoData = ImageService.compress(uiImage)
+                        viewModel.setImage(uiImage)
                     }
                 }
             }
@@ -113,7 +97,7 @@ struct AddEditFoodView: View {
                 Button {
                     showPhotoOptions = true
                 } label: {
-                    if let img = selectedImage {
+                    if let img = viewModel.selectedImage {
                         Image(uiImage: img)
                             .resizable()
                             .scaledToFill()
@@ -152,15 +136,15 @@ struct AddEditFoodView: View {
     private var basicInfoSection: some View {
         Section {
             VStack(alignment: .leading) {
-                TextField("field.name", text: $name)
+                TextField("field.name", text: $viewModel.name)
                     .autocorrectionDisabled()
                     .accessibilityLabel("field.name")
-                if let err = nameError {
+                if let err = viewModel.nameError {
                     Text(err).font(.footnote).foregroundStyle(Color(uiColor: .systemRed))
                 }
             }
 
-            Picker("field.category", selection: $category) {
+            Picker("field.category", selection: $viewModel.category) {
                 ForEach(FoodCategory.allCases) { cat in
                     Label(cat.localizedName, systemImage: "tag")
                         .tag(cat)
@@ -175,7 +159,7 @@ struct AddEditFoodView: View {
 
     private var storageSection: some View {
         Section {
-            Picker("field.location", selection: $storageLocation) {
+            Picker("field.location", selection: $viewModel.storageLocation) {
                 ForEach(StorageLocation.allCases) { loc in
                     Text("\(loc.emoji)  \(loc.localizedName)").tag(loc)
                 }
@@ -193,17 +177,17 @@ struct AddEditFoodView: View {
                 HStack {
                     Text("field.quantity")
                     Spacer()
-                    Stepper(value: $quantity, in: 0.1...9999, step: 1) {
-                        Text(quantity.formatted())
+                    Stepper(value: $viewModel.quantity, in: 0.1...9999, step: 1) {
+                        Text(viewModel.quantity.formatted())
                             .frame(minWidth: 50, alignment: .trailing)
                     }
                 }
-                if let err = quantityError {
+                if let err = viewModel.quantityError {
                     Text(err).font(.footnote).foregroundStyle(Color(uiColor: .systemRed))
                 }
             }
 
-            Picker("field.unit", selection: $unit) {
+            Picker("field.unit", selection: $viewModel.unit) {
                 ForEach(units, id: \.self) { u in
                     Text(NSLocalizedString("unit.\(u)", comment: u)).tag(u)
                 }
@@ -217,10 +201,10 @@ struct AddEditFoodView: View {
 
     private var datesSection: some View {
         Section {
-            DatePicker("field.purchaseDate", selection: $purchaseDate, displayedComponents: .date)
-            Toggle("field.hasExpiration", isOn: $hasExpirationDate)
-            if hasExpirationDate {
-                DatePicker("field.expirationDate", selection: $expirationDate, displayedComponents: .date)
+            DatePicker("field.purchaseDate", selection: $viewModel.purchaseDate, displayedComponents: .date)
+            Toggle("field.hasExpiration", isOn: $viewModel.hasExpirationDate)
+            if viewModel.hasExpirationDate {
+                DatePicker("field.expirationDate", selection: $viewModel.expirationDate, displayedComponents: .date)
             }
         } header: {
             Text("section.dates")
@@ -231,7 +215,7 @@ struct AddEditFoodView: View {
 
     private var notesSection: some View {
         Section {
-            TextField("field.notes", text: $notes, axis: .vertical)
+            TextField("field.notes", text: $viewModel.notes, axis: .vertical)
                 .lineLimit(3...6)
         } header: {
             Text("section.notes")
@@ -242,82 +226,16 @@ struct AddEditFoodView: View {
 
     // MARK: - Helpers
 
-    private func populateFields() {
-        guard let item else { return }
-        name = item.name
-        category = item.categoryEnum
-        storageLocation = item.storageLocationEnum
-        quantity = item.quantity
-        unit = item.unit
-        purchaseDate = item.purchaseDate
-        if let exp = item.expirationDate {
-            expirationDate = exp
-            hasExpirationDate = true
-        } else {
-            hasExpirationDate = false
-        }
-        notes = item.notes
-        if let data = item.photoData {
-            photoData = data
-            selectedImage = UIImage(data: data)
-        }
-    }
-
-    private func validate() -> Bool {
-        var valid = true
-        nameError = nil
-        quantityError = nil
-        if name.trimmingCharacters(in: .whitespaces).isEmpty {
-            nameError = NSLocalizedString("validation.nameRequired", comment: "")
-            valid = false
-        }
-        if quantity <= 0 {
-            quantityError = NSLocalizedString("validation.quantityPositive", comment: "")
-            valid = false
-        }
-        return valid
-    }
-
     private func save() {
-        guard validate() else { return }
-        isSaving = true
         do {
-            let repo = FoodRepository(context: modelContext)
-            let trimmed = name.trimmingCharacters(in: .whitespaces)
-            if let existing = item {
-                existing.name = trimmed
-                existing.category = category.rawValue
-                existing.storageLocation = storageLocation.rawValue
-                existing.quantity = quantity
-                existing.unit = unit
-                existing.purchaseDate = purchaseDate
-                existing.expirationDate = hasExpirationDate ? expirationDate : nil
-                existing.photoData = photoData
-                existing.notes = notes
-                existing.updatedAt = Date()
-                try repo.save(existing)
-                NotificationService.shared.cancelReminders(for: existing, advanceDays: reminderDays)
-                NotificationService.shared.scheduleReminders(for: existing, advanceDays: reminderDays)
-            } else {
-                let newItem = FoodItem(
-                    name: trimmed,
-                    category: category,
-                    storageLocation: storageLocation,
-                    quantity: quantity,
-                    unit: unit,
-                    purchaseDate: purchaseDate,
-                    expirationDate: hasExpirationDate ? expirationDate : nil,
-                    photoData: photoData,
-                    notes: notes
-                )
-                try repo.save(newItem)
-                NotificationService.shared.scheduleReminders(for: newItem, advanceDays: reminderDays)
+            if try viewModel.save(
+                to: FoodRepository(context: modelContext),
+                advanceDays: reminderDays
+            ) {
+                dismiss()
             }
-            isSaving = false
-            dismiss()
         } catch {
-            isSaving = false
-            saveError = error.localizedDescription
+            viewModel.saveError = error.localizedDescription
         }
     }
 
@@ -334,13 +252,12 @@ struct AddEditFoodView: View {
             }
         default:
             // Show settings alert
-            saveError = NSLocalizedString("error.cameraPermission", comment: "")
+            viewModel.saveError = NSLocalizedString("error.cameraPermission", comment: "")
         }
     }
 
     private func removePhoto() {
-        selectedImage = nil
-        photoData = nil
+        viewModel.removeImage()
     }
 }
 
