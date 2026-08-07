@@ -1,0 +1,189 @@
+/* 标签栏 */
+"tab.home" = "首页";
+"tab.list" = "冰箱";
+"tab.history" = "历史";
+"tab.settings" = "设置";
+
+/* 导航 */
+"nav.home" = "FridgePal";
+"nav.list" = "我的冰箱";
+"nav.addFood" = "添加食物";
+"nav.editFood" = "编辑食物";
+"nav.history" = "历史记录";
+"nav.settings" = "设置";
+
+/* 首页 */
+"home.total" = "总数";
+"home.expiringSoon" = "即将\n过期";
+"home.expired" = "已过期";
+"home.byLocation" = "存储位置";
+"home.recentItems" = "最近添加";
+
+/* 搜索 */
+"search.prompt" = "搜索食物...";
+
+/* 分类 */
+"category.vegetable" = "蔬菜";
+"category.fruit" = "水果";
+"category.meat" = "肉类";
+"category.dairy" = "乳制品";
+"category.beverage" = "饮料";
+"category.condiment" = "调味品";
+"category.cooked" = "熟食";
+"category.other" = "其他";
+
+/* 存储位置 */
+"location.fridge" = "冷藏室";
+"location.freezer" = "冷冻室";
+"location.pantry" = "食品柜";
+
+/* 状态 */
+"status.active" = "正常";
+"status.eaten" = "已吃完";
+"status.discarded" = "已丢弃";
+"status.expired" = "已过期";
+
+/* 过期状态 */
+"expiration.fresh" = "新鲜";
+"expiration.soon" = "即将过期";
+"expiration.expired" = "已过期";
+"expiration.noDate" = "";
+
+/* 表单分区 */
+"section.basicInfo" = "基本信息";
+"section.storage" = "存储位置";
+"section.quantity" = "数量";
+"section.dates" = "日期";
+"section.notes" = "备注";
+
+/* 字段 */
+"field.name" = "食物名称";
+"field.category" = "分类";
+"field.location" = "存放位置";
+"field.quantity" = "数量";
+"field.unit" = "单位";
+"field.purchaseDate" = "购买日期";
+"field.expirationDate" = "过期日期";
+"field.hasExpiration" = "设置过期日期";
+"field.notes" = "备注（可选）";
+
+/* 单位 */
+"unit.item" = "个";
+"unit.box" = "盒";
+"unit.bag" = "袋";
+"unit.bottle" = "瓶";
+"unit.g" = "克";
+"unit.kg" = "千克";
+"unit.oz" = "盎司";
+"unit.lb" = "磅";
+"unit.L" = "升";
+"unit.mL" = "毫升";
+"unit.pack" = "包";
+"unit.can" = "罐";
+"unit.piece" = "片";
+
+/* 按钮 */
+"button.addFood" = "添加食物";
+"button.save" = "保存";
+"button.cancel" = "取消";
+"button.edit" = "编辑";
+"button.delete" = "删除";
+"button.ok" = "确定";
+"button.clearAll" = "清空";
+"button.filter" = "筛选";
+"button.listView" = "列表视图";
+"button.gridView" = "网格视图";
+"button.addPhoto" = "添加照片";
+"button.markEaten" = "标记已吃完";
+"button.markDiscarded" = "标记已丢弃";
+"button.increaseQuantity" = "增加数量";
+"button.decreaseQuantity" = "减少数量";
+
+/* 照片 */
+"photo.sourceTitle" = "选择照片来源";
+"photo.camera" = "拍照";
+"photo.library" = "从相册选择";
+"photo.addPhoto" = "添加照片";
+"photo.remove" = "删除照片";
+
+/* 菜单 */
+"menu.sort" = "排序";
+"menu.filter" = "筛选";
+"menu.category" = "分类";
+"menu.location" = "位置";
+
+/* 排序选项 */
+"sort.expirationDate" = "按过期日期";
+"sort.addedDate" = "按添加时间";
+"sort.name" = "按名称";
+
+/* 筛选选项 */
+"filter.all" = "全部";
+"filter.fresh" = "新鲜";
+"filter.soon" = "即将过期";
+"filter.expired" = "已过期";
+
+/* 提示框 */
+"alert.errorTitle" = "错误";
+"alert.deleteTitle" = "删除食物";
+"alert.deleteMessage" = "此食物将被永久删除，确定吗？";
+"alert.clearHistoryTitle" = "清空历史";
+"alert.clearHistoryMessage" = "所有历史记录将被永久删除，此操作不可撤销。";
+
+/* 校验 */
+"validation.nameRequired" = "食物名称不能为空。";
+"validation.quantityPositive" = "数量必须大于 0。";
+
+/* 空状态 */
+"empty.noItems" = "暂无食物。\n点击 + 添加第一个食物！";
+"empty.noHistory" = "暂无历史记录。";
+
+/* 历史 */
+"history.total" = "总计";
+"history.eaten" = "已吃完";
+"history.wasted" = "已浪费";
+
+/* 时间范围 */
+"timeRange.week" = "近7天";
+"timeRange.month" = "近30天";
+"timeRange.year" = "近一年";
+"timeRange.all" = "全部";
+
+/* 设置 */
+"settings.notifications" = "过期提醒";
+"settings.remind1" = "提前1天提醒";
+"settings.remind3" = "提前3天提醒";
+"settings.remind7" = "提前7天提醒";
+"settings.icloud" = "iCloud 同步";
+"settings.syncStatus" = "同步状态";
+"settings.checkSync" = "刷新";
+"settings.icloudUnavailable" = "iCloud 不可用。";
+"settings.icloudUnavailableHint" = "请在「设置」中登录 iCloud 以启用同步。";
+"settings.display" = "显示";
+"settings.gridView" = "网格视图";
+"settings.colorScheme" = "外观";
+"settings.data" = "数据管理";
+"settings.clearHistory" = "清空历史记录";
+"settings.about" = "关于";
+"settings.version" = "版本";
+
+/* 外观模式 */
+"colorScheme.system" = "跟随系统";
+"colorScheme.light" = "浅色";
+"colorScheme.dark" = "深色";
+
+/* 同步状态 */
+"sync.syncing" = "同步中...";
+"sync.synced" = "已同步";
+"sync.idle" = "空闲";
+"sync.notLoggedIn" = "未登录 iCloud";
+
+/* iCloud */
+"icloud.unavailable" = "iCloud 不可用";
+
+/* 通知 */
+"notification.title" = "食物即将过期";
+"notification.body.format" = "「%@」将在 %d 天后过期。";
+
+/* 错误 */
+"error.cameraPermission" = "需要相机权限。请在「设置」>「隐私」>「相机」中开启。";

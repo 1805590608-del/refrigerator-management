@@ -1,0 +1,189 @@
+/* Tabs */
+"tab.home" = "Home";
+"tab.list" = "My Fridge";
+"tab.history" = "History";
+"tab.settings" = "Settings";
+
+/* Navigation */
+"nav.home" = "FridgePal";
+"nav.list" = "My Fridge";
+"nav.addFood" = "Add Food";
+"nav.editFood" = "Edit Food";
+"nav.history" = "History";
+"nav.settings" = "Settings";
+
+/* Home */
+"home.total" = "Total";
+"home.expiringSoon" = "Expiring\nSoon";
+"home.expired" = "Expired";
+"home.byLocation" = "By Location";
+"home.recentItems" = "Recently Added";
+
+/* Search */
+"search.prompt" = "Search food...";
+
+/* Category */
+"category.vegetable" = "Vegetable";
+"category.fruit" = "Fruit";
+"category.meat" = "Meat";
+"category.dairy" = "Dairy";
+"category.beverage" = "Beverage";
+"category.condiment" = "Condiment";
+"category.cooked" = "Cooked";
+"category.other" = "Other";
+
+/* Location */
+"location.fridge" = "Fridge";
+"location.freezer" = "Freezer";
+"location.pantry" = "Pantry";
+
+/* Status */
+"status.active" = "Active";
+"status.eaten" = "All Gone";
+"status.discarded" = "Discarded";
+"status.expired" = "Expired";
+
+/* Expiration */
+"expiration.fresh" = "Fresh";
+"expiration.soon" = "Expiring";
+"expiration.expired" = "Expired";
+"expiration.noDate" = "";
+
+/* Form Sections */
+"section.basicInfo" = "Basic Info";
+"section.storage" = "Storage";
+"section.quantity" = "Quantity";
+"section.dates" = "Dates";
+"section.notes" = "Notes";
+
+/* Fields */
+"field.name" = "Food Name";
+"field.category" = "Category";
+"field.location" = "Location";
+"field.quantity" = "Quantity";
+"field.unit" = "Unit";
+"field.purchaseDate" = "Purchase Date";
+"field.expirationDate" = "Expiration Date";
+"field.hasExpiration" = "Has Expiration Date";
+"field.notes" = "Notes (optional)";
+
+/* Units */
+"unit.item" = "Item";
+"unit.box" = "Box";
+"unit.bag" = "Bag";
+"unit.bottle" = "Bottle";
+"unit.g" = "g";
+"unit.kg" = "kg";
+"unit.oz" = "oz";
+"unit.lb" = "lb";
+"unit.L" = "L";
+"unit.mL" = "mL";
+"unit.pack" = "Pack";
+"unit.can" = "Can";
+"unit.piece" = "Piece";
+
+/* Buttons */
+"button.addFood" = "Add Food";
+"button.save" = "Save";
+"button.cancel" = "Cancel";
+"button.edit" = "Edit";
+"button.delete" = "Delete";
+"button.ok" = "OK";
+"button.clearAll" = "Clear All";
+"button.filter" = "Filter";
+"button.listView" = "List View";
+"button.gridView" = "Grid View";
+"button.addPhoto" = "Add Photo";
+"button.markEaten" = "Mark as All Gone";
+"button.markDiscarded" = "Mark as Discarded";
+"button.increaseQuantity" = "Increase Quantity";
+"button.decreaseQuantity" = "Decrease Quantity";
+
+/* Photo */
+"photo.sourceTitle" = "Choose Photo Source";
+"photo.camera" = "Take Photo";
+"photo.library" = "Choose from Library";
+"photo.addPhoto" = "Add Photo";
+"photo.remove" = "Remove Photo";
+
+/* Menus */
+"menu.sort" = "Sort";
+"menu.filter" = "Filter";
+"menu.category" = "Category";
+"menu.location" = "Location";
+
+/* Sort options */
+"sort.expirationDate" = "Expiration Date";
+"sort.addedDate" = "Date Added";
+"sort.name" = "Name";
+
+/* Filter options */
+"filter.all" = "All";
+"filter.fresh" = "Fresh";
+"filter.soon" = "Expiring Soon";
+"filter.expired" = "Expired";
+
+/* Alerts */
+"alert.errorTitle" = "Error";
+"alert.deleteTitle" = "Delete Food";
+"alert.deleteMessage" = "This item will be permanently deleted. Are you sure?";
+"alert.clearHistoryTitle" = "Clear History";
+"alert.clearHistoryMessage" = "All history records will be permanently deleted. This cannot be undone.";
+
+/* Validation */
+"validation.nameRequired" = "Name is required.";
+"validation.quantityPositive" = "Quantity must be greater than 0.";
+
+/* Empty States */
+"empty.noItems" = "No food items yet.\nTap + to add your first item!";
+"empty.noHistory" = "No history records.";
+
+/* History */
+"history.total" = "Total";
+"history.eaten" = "Eaten";
+"history.wasted" = "Wasted";
+
+/* Time Range */
+"timeRange.week" = "7 Days";
+"timeRange.month" = "30 Days";
+"timeRange.year" = "1 Year";
+"timeRange.all" = "All Time";
+
+/* Settings */
+"settings.notifications" = "Expiration Reminders";
+"settings.remind1" = "1 Day Before";
+"settings.remind3" = "3 Days Before";
+"settings.remind7" = "7 Days Before";
+"settings.icloud" = "iCloud Sync";
+"settings.syncStatus" = "Sync Status";
+"settings.checkSync" = "Refresh";
+"settings.icloudUnavailable" = "iCloud is not available.";
+"settings.icloudUnavailableHint" = "Please sign in to iCloud in Settings to enable sync.";
+"settings.display" = "Display";
+"settings.gridView" = "Grid View";
+"settings.colorScheme" = "Appearance";
+"settings.data" = "Data";
+"settings.clearHistory" = "Clear History";
+"settings.about" = "About";
+"settings.version" = "Version";
+
+/* Color Scheme */
+"colorScheme.system" = "System";
+"colorScheme.light" = "Light";
+"colorScheme.dark" = "Dark";
+
+/* Sync */
+"sync.syncing" = "Syncing...";
+"sync.synced" = "Up to Date";
+"sync.idle" = "Idle";
+"sync.notLoggedIn" = "Not signed in to iCloud";
+
+/* iCloud */
+"icloud.unavailable" = "iCloud is not available";
+
+/* Notifications */
+"notification.title" = "Food Expiring Soon";
+"notification.body.format" = "%@ expires in %d day(s).";
+
+/* Errors */
+"error.cameraPermission" = "Camera access is required. Please enable it in Settings → Privacy → Camera.";
