@@ -18,6 +18,16 @@
 "home.expired" = "已过期";
 "home.byLocation" = "存储位置";
 "home.recentItems" = "最近添加";
+"home.needsAttention" = "需要处理";
+"home.needsAttentionSubtitle" = "从这里开始，减少食物浪费。";
+"home.expiredNow" = "现已过期";
+"home.expiredNowSubtitle" = "请立即检查这些食物。";
+"home.useSoon" = "尽快食用";
+"home.useSoonSubtitle" = "优先食用这些食物。";
+"home.allClear" = "暂无待处理";
+"home.allClearSubtitle" = "目前没有需要处理的食物。";
+"home.viewAll" = "查看全部";
+"home.noActionItems" = "没有食物需要此操作。";
 
 /* 搜索 */
 "search.prompt" = "搜索食物...";
@@ -102,6 +112,7 @@
 
 /* 辅助功能 */
 "accessibility.addAgainFormat" = "再次添加“%@”";
+"accessibility.openFoodDetails" = "打开食物详情";
 
 /* 照片 */
 "photo.sourceTitle" = "选择照片来源";

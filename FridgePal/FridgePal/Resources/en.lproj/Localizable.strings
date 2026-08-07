@@ -18,6 +18,16 @@
 "home.expired" = "Expired";
 "home.byLocation" = "By Location";
 "home.recentItems" = "Recently Added";
+"home.needsAttention" = "Needs Attention";
+"home.needsAttentionSubtitle" = "Start here to reduce food waste.";
+"home.expiredNow" = "Expired Now";
+"home.expiredNowSubtitle" = "Review these items now.";
+"home.useSoon" = "Use Soon";
+"home.useSoonSubtitle" = "Use these items next.";
+"home.allClear" = "All Clear";
+"home.allClearSubtitle" = "Nothing needs attention right now.";
+"home.viewAll" = "View All";
+"home.noActionItems" = "No items need this action.";
 
 /* Search */
 "search.prompt" = "Search food...";
@@ -102,6 +112,7 @@
 
 /* Accessibility */
 "accessibility.addAgainFormat" = "Add %@ again";
+"accessibility.openFoodDetails" = "Opens food details";
 
 /* Photo */
 "photo.sourceTitle" = "Choose Photo Source";

@@ -104,6 +104,58 @@ final class FoodItemStatusTests: XCTestCase {
     }
 }
 
+// MARK: - Home Attention Tests
+
+final class HomeAttentionItemsTests: XCTestCase {
+
+    func testGroupsActiveUrgentItemsInActionableOrder() {
+        let now = Date()
+        let olderExpired = FoodItem(
+            name: "Older expired",
+            expirationDate: Calendar.current.date(byAdding: .day, value: -4, to: now)!
+        )
+        let recentlyExpired = FoodItem(
+            name: "Recently expired",
+            expirationDate: Calendar.current.date(byAdding: .day, value: -1, to: now)!
+        )
+        let useFirst = FoodItem(
+            name: "Use first",
+            expirationDate: Calendar.current.date(byAdding: .day, value: 1, to: now)!
+        )
+        let useNext = FoodItem(
+            name: "Use next",
+            expirationDate: Calendar.current.date(byAdding: .day, value: 2, to: now)!
+        )
+        let fresh = FoodItem(
+            name: "Fresh",
+            expirationDate: Calendar.current.date(byAdding: .day, value: 10, to: now)!
+        )
+        let archived = FoodItem(
+            name: "Archived",
+            expirationDate: Calendar.current.date(byAdding: .day, value: 1, to: now)!,
+            status: .eaten
+        )
+
+        let attentionItems = HomeAttentionItems(
+            items: [useNext, olderExpired, fresh, archived, useFirst, recentlyExpired]
+        )
+
+        XCTAssertEqual(attentionItems.expired.map(\.name), ["Recently expired", "Older expired"])
+        XCTAssertEqual(attentionItems.useSoon.map(\.name), ["Use first", "Use next"])
+        XCTAssertFalse(attentionItems.isEmpty)
+    }
+
+    func testIsEmptyWhenNothingNeedsAttention() {
+        let fresh = FoodItem(
+            name: "Fresh",
+            expirationDate: Calendar.current.date(byAdding: .day, value: 10, to: Date())!
+        )
+        let noDate = FoodItem(name: "No date")
+
+        XCTAssertTrue(HomeAttentionItems(items: [fresh, noDate]).isEmpty)
+    }
+}
+
 // MARK: - ImageService Tests
 
 final class ImageServiceTests: XCTestCase {
