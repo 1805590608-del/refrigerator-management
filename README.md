@@ -8,7 +8,7 @@ A full-featured iOS app for tracking household food inventory, expiration dates,
 
 | Feature | Details |
 |---|---|
-| **Home Dashboard** | Total count, expiring-soon count, expired count, recent items, location breakdown |
+| **Home Dashboard** | Prioritized “Expired Now” and “Use Soon” actions with direct item drill-down, plus summary counts, recent items, and location breakdown |
 | **Food List** | List/grid toggle, search, filter by status/category/location, sort by date/name |
 | **Add / Edit Food** | Camera or photo library, name, category, location, quantity, unit, purchase/expiry dates, notes |
 | **Quick Add** | Add an active item again from inventory details or history with every field prefilled and editable |
@@ -121,6 +121,7 @@ Press **⌘U** or Product → Test.
 
 Tests cover:
 - `ExpirationStateTests` — fresh / expiring-soon / expired / no-date logic
+- `HomeAttentionItemsTests` — urgent grouping, priority order, and all-clear behavior
 - `FoodItemStatusTests` — status enum roundtrips, graceful unknown values
 - `ImageServiceTests` — resize/compress behavior
 - `NotificationServiceTests` — schedule/cancel without crash

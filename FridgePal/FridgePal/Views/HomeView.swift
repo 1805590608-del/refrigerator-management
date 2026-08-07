@@ -285,7 +285,7 @@ private struct HomeActionGroup: View {
             if items.count > maximumVisibleItems {
                 Divider()
                 NavigationLink {
-                    HomeActionListView(kind: kind)
+                    HomeActionListView(kind: kind, onItemChange: onItemChange)
                 } label: {
                     HStack {
                         Text("home.viewAll")
@@ -332,6 +332,7 @@ private struct HomeActionListView: View {
     @State private var activeItems: [FoodItem] = []
 
     let kind: HomeActionKind
+    let onItemChange: () -> Void
 
     private var repository: FoodRepository {
         FoodRepository(context: modelContext)
@@ -350,7 +351,7 @@ private struct HomeActionListView: View {
                 List(items) { item in
                     NavigationLink {
                         FoodDetailView(item: item)
-                            .onDisappear(perform: loadItems)
+                            .onDisappear(perform: reloadItems)
                     } label: {
                         FoodRowView(item: item)
                             .padding(.vertical, AppSpacing.xSmall)
@@ -369,6 +370,11 @@ private struct HomeActionListView: View {
 
     private func loadItems() {
         activeItems = (try? repository.fetchActive()) ?? []
+    }
+
+    private func reloadItems() {
+        loadItems()
+        onItemChange()
     }
 }
 
