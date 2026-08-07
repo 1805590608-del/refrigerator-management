@@ -57,7 +57,7 @@ struct FoodFormDraft {
     init(historyRecord: HistoryRecord) {
         self.init(
             name: historyRecord.foodName,
-            category: FoodCategory(rawValue: historyRecord.category) ?? .other,
+            category: historyRecord.categoryEnum,
             storageLocation: StorageLocation(rawValue: historyRecord.storageLocation) ?? .fridge,
             quantity: historyRecord.quantity,
             unit: historyRecord.unit,
