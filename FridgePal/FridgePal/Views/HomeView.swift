@@ -268,7 +268,7 @@ private struct HomeActionGroup: View {
                         .padding(.vertical, AppSpacing.small)
                 }
                 .buttonStyle(.plain)
-                .accessibilityHint("accessibility.openFoodDetails")
+                .accessibilityHint(Text("accessibility.openFoodDetails"))
 
                 if index < visibleItems.count - 1 {
                     Divider()
@@ -346,7 +346,7 @@ private struct HomeActionListView: View {
                         FoodRowView(item: item)
                             .padding(.vertical, AppSpacing.xSmall)
                     }
-                    .accessibilityHint("accessibility.openFoodDetails")
+                    .accessibilityHint(Text("accessibility.openFoodDetails"))
                 }
                 .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
