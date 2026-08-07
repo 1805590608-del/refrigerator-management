@@ -20,7 +20,7 @@ struct HomeView: View {
         activeItems.filter { $0.expirationState == .expired }.count
     }
 
-    private var recentItems: [FoodItem] { Array(filteredItems.prefix(5)) }
+    private var recentItems: [FoodItem] { Array(activeItems.prefix(5)) }
 
     private var fridgeItems: [FoodItem]  { activeItems.filter { $0.storageLocationEnum == .fridge } }
     private var freezerItems: [FoodItem] { activeItems.filter { $0.storageLocationEnum == .freezer } }
@@ -129,7 +129,7 @@ struct HomeView: View {
 
                         if index < recentItems.count - 1 {
                             Divider()
-                                .padding(.leading, AppSpacing.large + 56 + AppSpacing.medium)
+                                .padding(.leading, AppSpacing.large + AppSizing.defaultThumbnailSize + AppSpacing.medium)
                         }
                     }
                 }

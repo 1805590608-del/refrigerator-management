@@ -15,6 +15,15 @@ enum AppCornerRadius {
     static let xLarge: CGFloat = 20
 }
 
+enum AppSizing {
+    static let defaultThumbnailSize: CGFloat = 56
+    static let largeThumbnailFontThreshold: CGFloat = 100
+}
+
+enum AppOpacity {
+    static let badgeFill: Double = 0.14
+}
+
 extension View {
     func appCardStyle(padding: CGFloat = AppSpacing.large) -> some View {
         modifier(AppCardModifier(contentPadding: padding))
@@ -61,7 +70,7 @@ struct AppSectionHeader: View {
 struct FoodThumbnailView: View {
     let imageData: Data?
     let placeholder: String
-    var size: CGFloat = 56
+    var size: CGFloat = AppSizing.defaultThumbnailSize
     var cornerRadius: CGFloat = AppCornerRadius.medium
 
     var body: some View {
@@ -72,7 +81,7 @@ struct FoodThumbnailView: View {
                     .scaledToFill()
             } else {
                 Text(placeholder)
-                    .font(size >= 100 ? .largeTitle : .title3)
+                    .font(size >= AppSizing.largeThumbnailFontThreshold ? .largeTitle : .title3)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(uiColor: .tertiarySystemGroupedBackground))
             }
@@ -93,63 +102,93 @@ struct StatusBadge: View {
             .labelStyle(.titleAndIcon)
             .padding(.horizontal, AppSpacing.small)
             .padding(.vertical, AppSpacing.xSmall)
-            .background(tint.opacity(0.14), in: Capsule())
+            .background(tint.opacity(AppOpacity.badgeFill), in: Capsule())
             .foregroundStyle(tint)
     }
 }
 
-extension ExpirationState {
+private enum StatusTone {
+    case positive
+    case warning
+    case critical
+    case neutral
+
     var tintColor: Color {
         switch self {
-        case .fresh:
+        case .positive:
             Color(uiColor: .systemGreen)
-        case .expiringSoon:
+        case .warning:
             Color(uiColor: .systemOrange)
-        case .expired:
+        case .critical:
             Color(uiColor: .systemRed)
-        case .noDate:
+        case .neutral:
             .secondary
         }
     }
 
     var symbolName: String {
         switch self {
-        case .fresh:
+        case .positive:
             "checkmark.circle.fill"
-        case .expiringSoon:
+        case .warning:
             "clock.fill"
-        case .expired:
+        case .critical:
             "exclamationmark.triangle.fill"
-        case .noDate:
+        case .neutral:
             "calendar"
         }
     }
 }
 
-extension FoodStatus {
+extension ExpirationState {
+    private var tone: StatusTone {
+        switch self {
+        case .fresh:
+            .positive
+        case .expiringSoon:
+            .warning
+        case .expired:
+            .critical
+        case .noDate:
+            .neutral
+        }
+    }
+
     var tintColor: Color {
+        tone.tintColor
+    }
+
+    var symbolName: String {
+        tone.symbolName
+    }
+}
+
+extension FoodStatus {
+    private var tone: StatusTone {
         switch self {
         case .eaten:
-            Color(uiColor: .systemGreen)
+            .positive
         case .discarded:
-            Color(uiColor: .systemOrange)
+            .warning
         case .expired:
-            Color(uiColor: .systemRed)
+            .critical
         case .active:
-            .secondary
+            .neutral
         }
+    }
+
+    var tintColor: Color {
+        tone.tintColor
     }
 
     var symbolName: String {
         switch self {
-        case .eaten:
-            "checkmark.circle.fill"
         case .discarded:
             "trash.fill"
-        case .expired:
-            "exclamationmark.triangle.fill"
         case .active:
             "circle.fill"
+        default:
+            tone.symbolName
         }
     }
 }

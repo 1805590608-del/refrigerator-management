@@ -81,9 +81,6 @@ struct FoodDetailView: View {
                 VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
                     Text(item.name)
                         .font(.title2.weight(.semibold))
-                    Text("\(item.quantity.formatted()) \(item.unit)")
-                        .font(.headline)
-                        .foregroundStyle(.primary)
                     Text("\(item.categoryEnum.localizedName) • \(item.storageLocationEnum.localizedName)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
