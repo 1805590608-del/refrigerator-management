@@ -98,6 +98,10 @@
 "button.markDiscarded" = "Mark as Discarded";
 "button.increaseQuantity" = "Increase Quantity";
 "button.decreaseQuantity" = "Decrease Quantity";
+"button.addAgain" = "Add Again";
+
+/* Accessibility */
+"accessibility.addAgainFormat" = "Add %@ again";
 
 /* Photo */
 "photo.sourceTitle" = "Choose Photo Source";
@@ -187,3 +191,4 @@
 
 /* Errors */
 "error.cameraPermission" = "Camera access is required. Please enable it in Settings → Privacy → Camera.";
+"error.repositoryUnavailable" = "Food storage is unavailable.";

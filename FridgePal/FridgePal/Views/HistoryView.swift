@@ -6,6 +6,7 @@ struct HistoryView: View {
     @State private var records: [HistoryRecord] = []
     @State private var selectedRange: HistoryViewModel.TimeRange = .month
     @State private var showClearAlert = false
+    @State private var recordToRepeat: HistoryRecord?
 
     private var repo: FoodRepository { FoodRepository(context: modelContext) }
 
@@ -37,7 +38,9 @@ struct HistoryView: View {
                 } else {
                     List {
                         ForEach(filtered) { record in
-                            HistoryRowView(record: record)
+                            HistoryRowView(record: record) {
+                                recordToRepeat = record
+                            }
                                 .swipeActions(edge: .trailing) {
                                     Button(role: .destructive) {
                                         deleteRecord(record)
@@ -67,6 +70,9 @@ struct HistoryView: View {
                 Button("button.cancel", role: .cancel) {}
             } message: {
                 Text("alert.clearHistoryMessage")
+            }
+            .sheet(item: $recordToRepeat) { record in
+                AddEditFoodView(prefill: FoodFormDraft(historyRecord: record))
             }
             .onAppear { loadRecords() }
         }
@@ -124,29 +130,48 @@ struct HistoryView: View {
 
 struct HistoryRowView: View {
     let record: HistoryRecord
+    let repeatAction: () -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: AppSpacing.medium) {
-            FoodThumbnailView(imageData: record.photoData, placeholder: record.categoryEnum.emoji, size: 52)
+            HStack(alignment: .top, spacing: AppSpacing.medium) {
+                FoodThumbnailView(imageData: record.photoData, placeholder: record.categoryEnum.emoji, size: 52)
 
-            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
-                Text(record.foodName)
-                    .font(.headline)
-                Text(record.archivedAt, style: .date)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                    Text(record.foodName)
+                        .font(.headline)
+                    Text(record.archivedAt, style: .date)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
             }
+            .accessibilityElement(children: .combine)
 
             Spacer()
 
-            StatusBadge(
-                title: record.finalStatusEnum.localizedName,
-                systemImage: record.finalStatusEnum.symbolName,
-                tint: statusColor
-            )
+            VStack(alignment: .trailing, spacing: AppSpacing.small) {
+                StatusBadge(
+                    title: record.finalStatusEnum.localizedName,
+                    systemImage: record.finalStatusEnum.symbolName,
+                    tint: statusColor
+                )
+
+                Button(action: repeatAction) {
+                    Label("button.addAgain", systemImage: "plus.circle")
+                        .font(.caption.weight(.semibold))
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(
+                    Text(
+                        String(
+                            format: NSLocalizedString("accessibility.addAgainFormat", comment: ""),
+                            record.foodName
+                        )
+                    )
+                )
+            }
         }
         .padding(.vertical, AppSpacing.xSmall)
-        .accessibilityElement(children: .combine)
     }
 
     private var statusColor: Color {
