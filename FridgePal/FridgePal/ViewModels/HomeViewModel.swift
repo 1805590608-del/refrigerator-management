@@ -55,7 +55,7 @@ final class HomeViewModel: ObservableObject {
 
     var totalCount: Int { activeItems.count }
 
-    private var attentionItems: HomeAttentionItems {
+    var attentionItems: HomeAttentionItems {
         HomeAttentionItems(items: activeItems)
     }
 

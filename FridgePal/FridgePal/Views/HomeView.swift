@@ -12,14 +12,6 @@ struct HomeView: View {
 
     private var totalCount: Int { activeItems.count }
 
-    private var attentionItems: HomeAttentionItems {
-        HomeAttentionItems(items: activeItems)
-    }
-
-    private var expiringSoonCount: Int { attentionItems.useSoon.count }
-
-    private var expiredCount: Int { attentionItems.expired.count }
-
     private var recentItems: [FoodItem] { Array(activeItems.prefix(5)) }
 
     private var fridgeItems: [FoodItem]  { activeItems.filter { $0.storageLocationEnum == .fridge } }
@@ -37,12 +29,14 @@ struct HomeView: View {
     private var repository: FoodRepository { FoodRepository(context: modelContext) }
 
     var body: some View {
+        let attentionItems = HomeAttentionItems(items: activeItems)
+
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.xLarge) {
                     SyncStatusBanner(status: cloudKitService.syncStatus)
-                    attentionSection
-                    summaryCards
+                    attentionSection(attentionItems)
+                    summaryCards(attentionItems)
                     locationBreakdown
                     recentSection
                 }
@@ -74,7 +68,7 @@ struct HomeView: View {
 
     // MARK: - Sub-views
 
-    private var attentionSection: some View {
+    private func attentionSection(_ attentionItems: HomeAttentionItems) -> some View {
         VStack(alignment: .leading, spacing: AppSpacing.medium) {
             AppSectionHeader(
                 title: "home.needsAttention",
@@ -103,7 +97,7 @@ struct HomeView: View {
         }
     }
 
-    private var summaryCards: some View {
+    private func summaryCards(_ attentionItems: HomeAttentionItems) -> some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: AppSpacing.medium)], spacing: AppSpacing.medium) {
             SummaryCard(
                 title: NSLocalizedString("home.total", comment: ""),
@@ -113,13 +107,13 @@ struct HomeView: View {
             )
             SummaryCard(
                 title: NSLocalizedString("home.expiringSoon", comment: ""),
-                count: expiringSoonCount,
+                count: attentionItems.useSoon.count,
                 color: Color(uiColor: .systemOrange),
                 icon: "exclamationmark.circle.fill"
             )
             SummaryCard(
                 title: NSLocalizedString("home.expired", comment: ""),
-                count: expiredCount,
+                count: attentionItems.expired.count,
                 color: Color(uiColor: .systemRed),
                 icon: "xmark.circle.fill"
             )
@@ -334,10 +328,6 @@ private struct HomeActionListView: View {
     let kind: HomeActionKind
     let onItemChange: () -> Void
 
-    private var repository: FoodRepository {
-        FoodRepository(context: modelContext)
-    }
-
     private var items: [FoodItem] {
         kind.items(in: HomeAttentionItems(items: activeItems))
     }
@@ -369,7 +359,7 @@ private struct HomeActionListView: View {
     }
 
     private func loadItems() {
-        activeItems = (try? repository.fetchActive()) ?? []
+        activeItems = (try? FoodRepository(context: modelContext).fetchActive()) ?? []
     }
 
     private func reloadItems() {
