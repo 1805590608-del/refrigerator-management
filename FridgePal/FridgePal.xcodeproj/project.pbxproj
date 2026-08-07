@@ -1,0 +1,498 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		160413DC002F40D6811AAB74 /* FridgePalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B1174AD29C449169745747D /* FridgePalApp.swift */; };
+		29DEFBBE32C54B93A69DDD46 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8084CF4D6F14233990F3768 /* ContentView.swift */; };
+		665B1E4131184D768F0EA6D2 /* FoodItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE4A1028B5E24F97AB699208 /* FoodItem.swift */; };
+		6EC5938120834ECFBF936C33 /* HistoryRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97E299A7FCC147DF96C65E51 /* HistoryRecord.swift */; };
+		B7607EEA85DE4C8FBFCF3245 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51FA48433CBE445BACD261B6 /* PersistenceController.swift */; };
+		33954CADE4E341C4A3FB8616 /* FoodRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96788B44A2492F94107422 /* FoodRepository.swift */; };
+		A2AF2E5A44ED400B964840D1 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279D2078C2E64345AF547CD4 /* NotificationService.swift */; };
+		B0885AF2539640DE81CCC1B2 /* CloudKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86866E568945438D9366AF8F /* CloudKitService.swift */; };
+		8E1FA1DEF85C460C9AB5CC3D /* ImageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE8EB6E552544D3ABBF1EFB /* ImageService.swift */; };
+		D19D17CD25FC4A9F86547EFD /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC9AC6F87F7427F824CB731 /* HomeViewModel.swift */; };
+		410F66379DFE4CEA86EB5149 /* FoodListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89CDADF9F3F468D8AFD0348 /* FoodListViewModel.swift */; };
+		11A330B525E24F70B8CD67C3 /* AddEditFoodViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CCC98F995BF417AB2C84E61 /* AddEditFoodViewModel.swift */; };
+		8861ADDEDA3F46638FDADEFF /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F588D84625447838D027351 /* HistoryViewModel.swift */; };
+		E3ED4B362D7F403799B5C2CF /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7B393637FD347168424589B /* HomeView.swift */; };
+		A5D0954D80834C7B9733E2BE /* FoodListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A334E5E2FA8F44D1A35ABE6E /* FoodListView.swift */; };
+		681BDB53E8224BEBA859D280 /* AddEditFoodView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E91F62D8C7994D8E81C654B1 /* AddEditFoodView.swift */; };
+		51F0E97A3EFE4D0EBBB8A7B9 /* FoodDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE263CEA76540118BE4C099 /* FoodDetailView.swift */; };
+		9A0561CB770B4CCE877AE8D2 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B73539DFC1C40E49C561736 /* HistoryView.swift */; };
+		D228E955E7E84CEB886E0589 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F846B7DBA22B4C6E97FB3047 /* SettingsView.swift */; };
+		3C5B6B2123434CD3834CB526 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A812125355E0464E9D0D40F5 /* Localizable.strings */; };
+		17A30C9B20EA4E2FAEA85EF7 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 999101407B724A598560A98A /* Localizable.strings */; };
+		C9EE38200BC54216AFEE4C0B /* FridgePalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B16D1AEC16497780306B24 /* FridgePalTests.swift */; };
+		7B762B2352664191A9A149EF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C041A4C013A940EDBD6B50C8 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		8B1174AD29C449169745747D /* FridgePalApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FridgePalApp.swift; sourceTree = "<group>"; };
+		C8084CF4D6F14233990F3768 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		EE4A1028B5E24F97AB699208 /* FoodItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodItem.swift; sourceTree = "<group>"; };
+		97E299A7FCC147DF96C65E51 /* HistoryRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryRecord.swift; sourceTree = "<group>"; };
+		51FA48433CBE445BACD261B6 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		1A96788B44A2492F94107422 /* FoodRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRepository.swift; sourceTree = "<group>"; };
+		279D2078C2E64345AF547CD4 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		86866E568945438D9366AF8F /* CloudKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitService.swift; sourceTree = "<group>"; };
+		0CE8EB6E552544D3ABBF1EFB /* ImageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageService.swift; sourceTree = "<group>"; };
+		3FC9AC6F87F7427F824CB731 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
+		A89CDADF9F3F468D8AFD0348 /* FoodListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodListViewModel.swift; sourceTree = "<group>"; };
+		7CCC98F995BF417AB2C84E61 /* AddEditFoodViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEditFoodViewModel.swift; sourceTree = "<group>"; };
+		6F588D84625447838D027351 /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
+		B7B393637FD347168424589B /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		A334E5E2FA8F44D1A35ABE6E /* FoodListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodListView.swift; sourceTree = "<group>"; };
+		E91F62D8C7994D8E81C654B1 /* AddEditFoodView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEditFoodView.swift; sourceTree = "<group>"; };
+		3CE263CEA76540118BE4C099 /* FoodDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodDetailView.swift; sourceTree = "<group>"; };
+		6B73539DFC1C40E49C561736 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		F846B7DBA22B4C6E97FB3047 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A812125355E0464E9D0D40F5 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
+		999101407B724A598560A98A /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
+
+		B0B16D1AEC16497780306B24 /* FridgePalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FridgePalTests.swift; sourceTree = "<group>"; };
+		C041A4C013A940EDBD6B50C8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BBB78437B51D4161832B4677 /* FridgePal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FridgePal.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C6FB8A9DCFED40159FBB18A0 /* FridgePalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FridgePalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A354D7DE93804701A6C2CC05 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+
+		A77BAB0C200A48BF808CDC41 /* FridgePal */ = {
+			isa = PBXGroup;
+			children = (
+				8B1174AD29C449169745747D,
+				C8084CF4D6F14233990F3768,
+				EE4A1028B5E24F97AB699208,
+				97E299A7FCC147DF96C65E51,
+				51FA48433CBE445BACD261B6,
+				1A96788B44A2492F94107422,
+				279D2078C2E64345AF547CD4,
+				86866E568945438D9366AF8F,
+				0CE8EB6E552544D3ABBF1EFB,
+				3FC9AC6F87F7427F824CB731,
+				A89CDADF9F3F468D8AFD0348,
+				7CCC98F995BF417AB2C84E61,
+				6F588D84625447838D027351,
+				B7B393637FD347168424589B,
+				A334E5E2FA8F44D1A35ABE6E,
+				E91F62D8C7994D8E81C654B1,
+				3CE263CEA76540118BE4C099,
+				6B73539DFC1C40E49C561736,
+				F846B7DBA22B4C6E97FB3047,
+				C041A4C013A940EDBD6B50C8,
+				10257CD36306467D9C84467F /* (already listed) */,
+			);
+			path = FridgePal;
+			sourceTree = "<group>";
+		};
+
+		D3E4C8ED911148A49F52DB39 /* FridgePalTests */ = {
+			isa = PBXGroup;
+			children = (
+				B0B16D1AEC16497780306B24 /* FridgePalTests.swift */,
+			);
+			path = FridgePalTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1A6C6333B08E421DA26E590F /* FridgePal */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C60040C5CBE04B8ABD65C84A /* Build configuration list for PBXNativeTarget "FridgePal" */;
+			buildPhases = (
+				EF4E9B18970449BFBE3ED714 /* Sources */,
+				95BDCD75728845DB872D9374 /* Resources */,
+				A354D7DE93804701A6C2CC05 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FridgePal;
+			packageProductDependencies = (
+			);
+			productName = FridgePal;
+			productReference = BBB78437B51D4161832B4677 /* FridgePal.app */;
+			productType = "com.apple.product-type.application";
+		};
+
+		CFA01309636F483F93493EC8 /* FridgePalTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 05FBE8EA93804F91A7DEF3E2 /* Build configuration list for PBXNativeTarget "FridgePalTests" */;
+			buildPhases = (
+				654AE9910F7A4E1DA2DDE8C8 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2F2DC0BEAAE34A519C29F271 /* PBXTargetDependency */,
+			);
+			name = FridgePalTests;
+			productName = FridgePalTests;
+			productReference = C6FB8A9DCFED40159FBB18A0 /* FridgePalTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B086106F210346E3AE28403F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					1A6C6333B08E421DA26E590F = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					CFA01309636F483F93493EC8 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = 1A6C6333B08E421DA26E590F;
+					};
+				};
+			};
+			buildConfigurationList = AE462A76E14D4F65A262509D /* Build configuration list for PBXProject "FridgePal" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				"zh-Hans",
+				Base,
+			);
+			mainGroup = A77BAB0C200A48BF808CDC41;
+			productRefGroup = A77BAB0C200A48BF808CDC41;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1A6C6333B08E421DA26E590F /* FridgePal */,
+				CFA01309636F483F93493EC8 /* FridgePalTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		95BDCD75728845DB872D9374 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C5B6B2123434CD3834CB526 /* Localizable.strings in Resources */,
+				17A30C9B20EA4E2FAEA85EF7 /* Localizable.strings in Resources */,
+				7B762B2352664191A9A149EF /* Assets.xcassets in Resources */,
+
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		EF4E9B18970449BFBE3ED714 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				160413DC002F40D6811AAB74 /* FridgePalApp.swift in Sources */,
+				29DEFBBE32C54B93A69DDD46 /* ContentView.swift in Sources */,
+				665B1E4131184D768F0EA6D2 /* FoodItem.swift in Sources */,
+				6EC5938120834ECFBF936C33 /* HistoryRecord.swift in Sources */,
+				B7607EEA85DE4C8FBFCF3245 /* PersistenceController.swift in Sources */,
+				33954CADE4E341C4A3FB8616 /* FoodRepository.swift in Sources */,
+				A2AF2E5A44ED400B964840D1 /* NotificationService.swift in Sources */,
+				B0885AF2539640DE81CCC1B2 /* CloudKitService.swift in Sources */,
+				8E1FA1DEF85C460C9AB5CC3D /* ImageService.swift in Sources */,
+				D19D17CD25FC4A9F86547EFD /* HomeViewModel.swift in Sources */,
+				410F66379DFE4CEA86EB5149 /* FoodListViewModel.swift in Sources */,
+				11A330B525E24F70B8CD67C3 /* AddEditFoodViewModel.swift in Sources */,
+				8861ADDEDA3F46638FDADEFF /* HistoryViewModel.swift in Sources */,
+				E3ED4B362D7F403799B5C2CF /* HomeView.swift in Sources */,
+				A5D0954D80834C7B9733E2BE /* FoodListView.swift in Sources */,
+				681BDB53E8224BEBA859D280 /* AddEditFoodView.swift in Sources */,
+				51F0E97A3EFE4D0EBBB8A7B9 /* FoodDetailView.swift in Sources */,
+				9A0561CB770B4CCE877AE8D2 /* HistoryView.swift in Sources */,
+				D228E955E7E84CEB886E0589 /* SettingsView.swift in Sources */,
+
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+
+		654AE9910F7A4E1DA2DDE8C8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C9EE38200BC54216AFEE4C0B /* FridgePalTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		2F2DC0BEAAE34A519C29F271 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1A6C6333B08E421DA26E590F /* FridgePal */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		3B85EED4948C405B9DD7E266 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSTCAT_COMPILER_OPTIMIZATION = space;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FridgePal/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FridgePal;
+				INFOPLIST_KEY_NSCameraUsageDescription = "FridgePal uses the camera to take photos of your food items.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "FridgePal accesses your photo library to add food photos.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "FridgePal saves photos to your photo library.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LE_SWIFT_VERSION = 5.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fridgepal.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+
+		0DE8F3FADCAC44279BEA427E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETS_COMPILER_OPTIMIZATION = space;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FridgePal/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = FridgePal;
+				INFOPLIST_KEY_NSCameraUsageDescription = "FridgePal uses the camera to take photos of your food items.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "FridgePal accesses your photo library to add food photos.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "FridgePal saves photos to your photo library.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LE_SWIFT_VERSION = 5.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fridgepal.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+
+		1675B58D9124420081AE1698 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fridgepal.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FridgePal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FridgePal";
+			};
+			name = Debug;
+		};
+
+		4DA4CA10B64C41DBBE7BF738 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fridgepal.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FridgePal.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FridgePal";
+			};
+			name = Release;
+		};
+
+		11907A6BF08F4722B03A7355 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+
+		6175A570DA7A43F5B42446DD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AE462A76E14D4F65A262509D /* Build configuration list for PBXProject "FridgePal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				11907A6BF08F4722B03A7355 /* Debug */,
+				6175A570DA7A43F5B42446DD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C60040C5CBE04B8ABD65C84A /* Build configuration list for PBXNativeTarget "FridgePal" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3B85EED4948C405B9DD7E266 /* Debug */,
+				0DE8F3FADCAC44279BEA427E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		05FBE8EA93804F91A7DEF3E2 /* Build configuration list for PBXNativeTarget "FridgePalTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1675B58D9124420081AE1698 /* Debug */,
+				4DA4CA10B64C41DBBE7BF738 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+	};
+	rootObject = B086106F210346E3AE28403F /* Project object */;
+}
