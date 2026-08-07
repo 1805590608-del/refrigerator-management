@@ -22,7 +22,10 @@ struct SettingsView: View {
                 dataSection
                 aboutSection
             }
+            .scrollContentBackground(.hidden)
+            .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("nav.settings")
+            .navigationBarTitleDisplayMode(.large)
             .onAppear { parseReminderDays() }
             .alert("alert.clearHistoryTitle", isPresented: $showClearAlert) {
                 Button("button.clearAll", role: .destructive) { clearHistory() }
@@ -36,18 +39,22 @@ struct SettingsView: View {
     // MARK: Sections
 
     private var notificationSection: some View {
-        Section(header: Text("settings.notifications")) {
+        Section {
             Toggle("settings.remind1", isOn: $remind1)
                 .onChange(of: remind1) { _, _ in saveReminderDays() }
             Toggle("settings.remind3", isOn: $remind3)
                 .onChange(of: remind3) { _, _ in saveReminderDays() }
             Toggle("settings.remind7", isOn: $remind7)
                 .onChange(of: remind7) { _, _ in saveReminderDays() }
+        } header: {
+            Text("settings.notifications")
+                .textCase(nil)
+                .font(.footnote.weight(.semibold))
         }
     }
 
     private var syncSection: some View {
-        Section(header: Text("settings.icloud")) {
+        Section {
             HStack {
                 Label("settings.syncStatus", systemImage: "icloud")
                 Spacer()
@@ -62,33 +69,37 @@ struct SettingsView: View {
             if !cloudKitService.isICloudAvailable {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("settings.icloudUnavailable")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
+                        .font(.footnote)
+                        .foregroundStyle(Color(uiColor: .systemOrange))
                     Text("settings.icloudUnavailableHint")
-                        .font(.caption2)
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
             }
+        } header: {
+            Text("settings.icloud")
+                .textCase(nil)
+                .font(.footnote.weight(.semibold))
         }
     }
 
     private var syncStatusView: some View {
         switch cloudKitService.syncStatus {
         case .idle:
-            return AnyView(Text("sync.idle").font(.caption).foregroundStyle(.secondary))
+            return AnyView(Text("sync.idle").font(.footnote).foregroundStyle(.secondary))
         case .syncing:
-            return AnyView(HStack { ProgressView().scaleEffect(0.7); Text("sync.syncing").font(.caption) })
+            return AnyView(HStack { ProgressView().scaleEffect(0.7); Text("sync.syncing").font(.footnote) })
         case .synced:
-            return AnyView(Text("sync.synced").font(.caption).foregroundStyle(.green))
+            return AnyView(Text("sync.synced").font(.footnote).foregroundStyle(Color(uiColor: .systemGreen)))
         case .error(let msg):
-            return AnyView(Text(msg).font(.caption).foregroundStyle(.red).lineLimit(2))
+            return AnyView(Text(msg).font(.footnote).foregroundStyle(Color(uiColor: .systemRed)).lineLimit(2))
         case .notLoggedIn:
-            return AnyView(Text("sync.notLoggedIn").font(.caption).foregroundStyle(.orange))
+            return AnyView(Text("sync.notLoggedIn").font(.footnote).foregroundStyle(Color(uiColor: .systemOrange)))
         }
     }
 
     private var displaySection: some View {
-        Section(header: Text("settings.display")) {
+        Section {
             Toggle("settings.gridView", isOn: $preferGridView)
 
             Picker("settings.colorScheme", selection: $colorSchemeRaw) {
@@ -96,28 +107,40 @@ struct SettingsView: View {
                 Text("colorScheme.light").tag("light")
                 Text("colorScheme.dark").tag("dark")
             }
+        } header: {
+            Text("settings.display")
+                .textCase(nil)
+                .font(.footnote.weight(.semibold))
         }
     }
 
     private var dataSection: some View {
-        Section(header: Text("settings.data")) {
+        Section {
             Button(role: .destructive) {
                 showClearAlert = true
             } label: {
                 Label("settings.clearHistory", systemImage: "trash")
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Color(uiColor: .systemRed))
             }
+        } header: {
+            Text("settings.data")
+                .textCase(nil)
+                .font(.footnote.weight(.semibold))
         }
     }
 
     private var aboutSection: some View {
-        Section(header: Text("settings.about")) {
+        Section {
             HStack {
                 Text("settings.version")
                 Spacer()
                 Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")
                     .foregroundStyle(.secondary)
             }
+        } header: {
+            Text("settings.about")
+                .textCase(nil)
+                .font(.footnote.weight(.semibold))
         }
     }
 

@@ -62,8 +62,9 @@ struct FoodListView: View {
                     listView
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("nav.list")
+            .navigationBarTitleDisplayMode(.large)
             .searchable(text: $searchText, prompt: "search.prompt")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -110,28 +111,32 @@ struct FoodListView: View {
 
     private var listView: some View {
         List {
-            ForEach(displayedItems) { item in
-                NavigationLink(destination: FoodDetailView(item: item).onDisappear { loadItems() }) {
-                    FoodRowView(item: item)
-                }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button(role: .destructive) {
-                        itemToDelete = item
-                        showDeleteAlert = true
-                    } label: {
-                        Label("button.delete", systemImage: "trash")
+            Section {
+                ForEach(displayedItems) { item in
+                    NavigationLink(destination: FoodDetailView(item: item).onDisappear { loadItems() }) {
+                        FoodRowView(item: item)
+                            .padding(.vertical, AppSpacing.xSmall)
                     }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            itemToDelete = item
+                            showDeleteAlert = true
+                        } label: {
+                            Label("button.delete", systemImage: "trash")
+                        }
 
-                    Button {
-                        markEaten(item)
-                    } label: {
-                        Label("status.eaten", systemImage: "checkmark.circle")
+                        Button {
+                            markEaten(item)
+                        } label: {
+                            Label("status.eaten", systemImage: "checkmark.circle")
+                        }
+                        .tint(Color(uiColor: .systemGreen))
                     }
-                    .tint(.green)
                 }
             }
         }
         .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
     }
 
     // MARK: Grid View
@@ -146,7 +151,8 @@ struct FoodListView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding()
+            .padding(.horizontal, AppSpacing.large)
+            .padding(.vertical, AppSpacing.large)
         }
     }
 
@@ -246,53 +252,42 @@ struct FoodRowView: View {
     let item: FoodItem
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Thumbnail
-            Group {
-                if let data = item.photoData, let img = UIImage(data: data) {
-                    Image(uiImage: img)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    Text(item.categoryEnum.emoji)
-                        .font(.title2)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color(.secondarySystemBackground))
-                }
-            }
-            .frame(width: 50, height: 50)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+        HStack(alignment: .top, spacing: AppSpacing.medium) {
+            FoodThumbnailView(imageData: item.photoData, placeholder: item.categoryEnum.emoji)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
                 Text(item.name)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+                Text(item.categoryEnum.localizedName)
                     .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .lineLimit(1)
+                    .foregroundStyle(.secondary)
                 Text("\(item.quantity.formatted()) \(item.unit)  •  \(item.storageLocationEnum.localizedName)")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                 if let exp = item.expirationDate {
-                    Text(exp, style: .date)
-                        .font(.caption)
-                        .foregroundStyle(expirationColor)
+                    Label {
+                        Text(exp, style: .date)
+                    } icon: {
+                        Image(systemName: "calendar")
+                    }
+                    .font(.footnote)
+                    .foregroundStyle(expirationColor)
                 }
             }
 
             Spacer()
 
             ExpirationBadge(state: item.expirationState)
+                .padding(.top, 2)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, AppSpacing.xSmall)
         .accessibilityElement(children: .combine)
     }
 
     private var expirationColor: Color {
-        switch item.expirationState {
-        case .fresh:        return .green
-        case .expiringSoon: return .orange
-        case .expired:      return .red
-        case .noDate:       return .secondary
-        }
+        item.expirationState.tintColor
     }
 }
 
@@ -302,38 +297,33 @@ struct FoodGridCell: View {
     let item: FoodItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Group {
-                if let data = item.photoData, let img = UIImage(data: data) {
-                    Image(uiImage: img)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    Text(item.categoryEnum.emoji)
-                        .font(.largeTitle)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color(.secondarySystemBackground))
-                }
-            }
-            .frame(height: 100)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+        VStack(alignment: .leading, spacing: AppSpacing.small) {
+            FoodThumbnailView(
+                imageData: item.photoData,
+                placeholder: item.categoryEnum.emoji,
+                size: 128,
+                cornerRadius: AppCornerRadius.large
+            )
+            .frame(maxWidth: .infinity)
 
             Text(item.name)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .lineLimit(1)
+                .font(.headline)
+                .lineLimit(2)
 
-            HStack {
+            Text(item.categoryEnum.localizedName)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            HStack(alignment: .top) {
                 Text("\(item.quantity.formatted()) \(item.unit)")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                 Spacer()
                 ExpirationBadge(state: item.expirationState)
             }
         }
-        .padding(10)
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
-        .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .appCardStyle(padding: AppSpacing.medium)
         .accessibilityElement(children: .combine)
     }
 }
@@ -348,23 +338,16 @@ struct ExpirationBadge: View {
         case .noDate:
             EmptyView()
         default:
-            Text(state.localizedLabel)
-                .font(.caption2)
-                .fontWeight(.semibold)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
-                .background(badgeColor.opacity(0.15), in: Capsule())
-                .foregroundStyle(badgeColor)
+            StatusBadge(
+                title: state.localizedLabel,
+                systemImage: state.symbolName,
+                tint: badgeColor
+            )
         }
     }
 
     private var badgeColor: Color {
-        switch state {
-        case .fresh:        return .green
-        case .expiringSoon: return .orange
-        case .expired:      return .red
-        case .noDate:       return .gray
-        }
+        state.tintColor
     }
 }
 

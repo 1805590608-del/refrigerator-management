@@ -51,6 +51,8 @@ struct AddEditFoodView: View {
                 datesSection
                 notesSection
             }
+            .scrollContentBackground(.hidden)
+            .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle(item == nil ? "nav.addFood" : "nav.editFood")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -125,14 +127,14 @@ struct AddEditFoodView: View {
                     } else {
                         VStack(spacing: 8) {
                             Image(systemName: "camera.fill")
-                                .font(.title)
+                                .font(.title2)
                                 .foregroundStyle(.secondary)
                             Text("photo.addPhoto")
-                                .font(.caption)
+                                .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
                         .frame(width: 120, height: 120)
-                        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
+                        .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: AppCornerRadius.large, style: .continuous))
                     }
                 }
                 .accessibilityLabel("button.addPhoto")
@@ -140,17 +142,21 @@ struct AddEditFoodView: View {
             }
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets(top: 12, leading: 0, bottom: 12, trailing: 0))
+        } header: {
+            Text("photo.addPhoto")
+                .textCase(nil)
+                .font(.footnote.weight(.semibold))
         }
     }
 
     private var basicInfoSection: some View {
-        Section(header: Text("section.basicInfo")) {
+        Section {
             VStack(alignment: .leading) {
                 TextField("field.name", text: $name)
                     .autocorrectionDisabled()
                     .accessibilityLabel("field.name")
                 if let err = nameError {
-                    Text(err).font(.caption).foregroundStyle(.red)
+                    Text(err).font(.footnote).foregroundStyle(Color(uiColor: .systemRed))
                 }
             }
 
@@ -160,21 +166,29 @@ struct AddEditFoodView: View {
                         .tag(cat)
                 }
             }
+        } header: {
+            Text("section.basicInfo")
+                .textCase(nil)
+                .font(.footnote.weight(.semibold))
         }
     }
 
     private var storageSection: some View {
-        Section(header: Text("section.storage")) {
+        Section {
             Picker("field.location", selection: $storageLocation) {
                 ForEach(StorageLocation.allCases) { loc in
                     Text("\(loc.emoji)  \(loc.localizedName)").tag(loc)
                 }
             }
+        } header: {
+            Text("section.storage")
+                .textCase(nil)
+                .font(.footnote.weight(.semibold))
         }
     }
 
     private var quantitySection: some View {
-        Section(header: Text("section.quantity")) {
+        Section {
             VStack(alignment: .leading) {
                 HStack {
                     Text("field.quantity")
@@ -185,7 +199,7 @@ struct AddEditFoodView: View {
                     }
                 }
                 if let err = quantityError {
-                    Text(err).font(.caption).foregroundStyle(.red)
+                    Text(err).font(.footnote).foregroundStyle(Color(uiColor: .systemRed))
                 }
             }
 
@@ -194,23 +208,35 @@ struct AddEditFoodView: View {
                     Text(NSLocalizedString("unit.\(u)", comment: u)).tag(u)
                 }
             }
+        } header: {
+            Text("section.quantity")
+                .textCase(nil)
+                .font(.footnote.weight(.semibold))
         }
     }
 
     private var datesSection: some View {
-        Section(header: Text("section.dates")) {
+        Section {
             DatePicker("field.purchaseDate", selection: $purchaseDate, displayedComponents: .date)
             Toggle("field.hasExpiration", isOn: $hasExpirationDate)
             if hasExpirationDate {
                 DatePicker("field.expirationDate", selection: $expirationDate, displayedComponents: .date)
             }
+        } header: {
+            Text("section.dates")
+                .textCase(nil)
+                .font(.footnote.weight(.semibold))
         }
     }
 
     private var notesSection: some View {
-        Section(header: Text("section.notes")) {
+        Section {
             TextField("field.notes", text: $notes, axis: .vertical)
                 .lineLimit(3...6)
+        } header: {
+            Text("section.notes")
+                .textCase(nil)
+                .font(.footnote.weight(.semibold))
         }
     }
 
