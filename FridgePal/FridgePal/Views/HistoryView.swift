@@ -18,20 +18,18 @@ struct HistoryView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Stats bar
                 statsBar
-                    .padding()
-                    .background(Color(.systemBackground))
+                    .padding(.horizontal, AppSpacing.large)
+                    .padding(.top, AppSpacing.large)
 
-                // Range picker
                 Picker("", selection: $selectedRange) {
                     ForEach(HistoryViewModel.TimeRange.allCases) { range in
                         Text(range.localizedName).tag(range)
                     }
                 }
                 .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.bottom, 8)
+                .padding(.horizontal, AppSpacing.large)
+                .padding(.vertical, AppSpacing.medium)
 
                 if filtered.isEmpty {
                     EmptyStateView(message: "empty.noHistory", icon: "clock.arrow.circlepath")
@@ -50,10 +48,12 @@ struct HistoryView: View {
                         }
                     }
                     .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("nav.history")
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("button.clearAll", role: .destructive) {
@@ -73,36 +73,35 @@ struct HistoryView: View {
     }
 
     private var statsBar: some View {
-        HStack(spacing: 20) {
+        HStack(spacing: AppSpacing.large) {
             VStack {
                 Text("\(filtered.count)")
-                    .font(.title2)
-                    .fontWeight(.bold)
+                    .font(.title2.weight(.semibold))
                 Text("history.total")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
             }
             Divider().frame(height: 40)
             VStack {
                 Text("\(filtered.filter { $0.finalStatusEnum == .eaten }.count)")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.green)
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(Color(uiColor: .systemGreen))
                 Text("history.eaten")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
             }
             Divider().frame(height: 40)
             VStack {
                 Text("\(filtered.filter { $0.finalStatusEnum == .discarded || $0.finalStatusEnum == .expired }.count)")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.red)
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(Color(uiColor: .systemRed))
                 Text("history.wasted")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
             }
         }
+        .frame(maxWidth: .infinity)
+        .appCardStyle()
         .accessibilityElement(children: .combine)
     }
 
@@ -127,50 +126,31 @@ struct HistoryRowView: View {
     let record: HistoryRecord
 
     var body: some View {
-        HStack(spacing: 12) {
-            if let data = record.photoData, let img = UIImage(data: data) {
-                Image(uiImage: img)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 44, height: 44)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            } else {
-                Text(record.categoryEnum.emoji)
-                    .font(.title2)
-                    .frame(width: 44, height: 44)
-                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
-            }
+        HStack(alignment: .top, spacing: AppSpacing.medium) {
+            FoodThumbnailView(imageData: record.photoData, placeholder: record.categoryEnum.emoji, size: 52)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
                 Text(record.foodName)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
+                    .font(.headline)
                 Text(record.archivedAt, style: .date)
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
             }
 
             Spacer()
 
-            Text(record.finalStatusEnum.localizedName)
-                .font(.caption)
-                .fontWeight(.semibold)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(statusColor.opacity(0.15), in: Capsule())
-                .foregroundStyle(statusColor)
+            StatusBadge(
+                title: record.finalStatusEnum.localizedName,
+                systemImage: record.finalStatusEnum.symbolName,
+                tint: statusColor
+            )
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, AppSpacing.xSmall)
         .accessibilityElement(children: .combine)
     }
 
     private var statusColor: Color {
-        switch record.finalStatusEnum {
-        case .eaten:    return .green
-        case .discarded: return .orange
-        case .expired:  return .red
-        default:        return .gray
-        }
+        record.finalStatusEnum.tintColor
     }
 }
 

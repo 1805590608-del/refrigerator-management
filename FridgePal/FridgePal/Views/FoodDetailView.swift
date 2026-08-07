@@ -12,51 +12,22 @@ struct FoodDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                // Photo hero
+            VStack(alignment: .leading, spacing: AppSpacing.xLarge) {
                 photoHero
+                headerCard
+                detailsCard
 
-                // Info card
-                VStack(alignment: .leading, spacing: 16) {
-                    // Name + badge
-                    HStack {
-                        Text(item.name)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        Spacer()
-                        ExpirationBadge(state: item.expirationState)
-                    }
-
-                    Divider()
-
-                    // Details grid
-                    detailsGrid
-
-                    if !item.notes.isEmpty {
-                        Divider()
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("field.notes")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(item.notes)
-                                .font(.body)
-                        }
-                    }
-
-                    Divider()
-
-                    // Quantity adjuster
-                    quantityAdjuster
-
-                    Divider()
-
-                    // Action buttons
-                    actionButtons
+                if !item.notes.isEmpty {
+                    notesCard
                 }
-                .padding()
+
+                quantityAdjuster
+                actionButtons
             }
+            .padding(.horizontal, AppSpacing.large)
+            .padding(.vertical, AppSpacing.large)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color(uiColor: .systemGroupedBackground))
         .navigationTitle(item.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -83,27 +54,66 @@ struct FoodDetailView: View {
 
     private var photoHero: some View {
         Group {
-            if let data = item.photoData, let img = UIImage(data: data) {
-                Image(uiImage: img)
+            if let data = item.photoData, let image = UIImage(data: data) {
+                Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 250)
-                    .clipped()
             } else {
-                Text(item.categoryEnum.emoji)
-                    .font(.system(size: 60))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 160)
-                    .background(Color(.secondarySystemBackground))
+                VStack(spacing: AppSpacing.small) {
+                    Text(item.categoryEnum.emoji)
+                        .font(.system(size: 56))
+                    Text(item.categoryEnum.localizedName)
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color(uiColor: .tertiarySystemGroupedBackground))
             }
         }
+        .frame(maxWidth: .infinity)
+        .frame(height: 240)
+        .clipShape(RoundedRectangle(cornerRadius: AppCornerRadius.xLarge, style: .continuous))
+    }
+
+    private var headerCard: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            HStack(alignment: .top, spacing: AppSpacing.medium) {
+                VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                    Text(item.name)
+                        .font(.title2.weight(.semibold))
+                    Text("\(item.categoryEnum.localizedName) • \(item.storageLocationEnum.localizedName)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer(minLength: AppSpacing.medium)
+                ExpirationBadge(state: item.expirationState)
+            }
+        }
+        .appCardStyle()
+    }
+
+    private var detailsCard: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            AppSectionHeader(title: "section.basicInfo")
+            detailsGrid
+        }
+        .appCardStyle()
+    }
+
+    private var notesCard: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.small) {
+            AppSectionHeader(title: "section.notes")
+            Text(item.notes)
+                .font(.body)
+                .foregroundStyle(.primary)
+        }
+        .appCardStyle()
     }
 
     // MARK: - Details Grid
 
     private var detailsGrid: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: AppSpacing.medium), GridItem(.flexible(), spacing: AppSpacing.medium)], spacing: AppSpacing.medium) {
             DetailRow(label: "field.category", value: "\(item.categoryEnum.emoji) \(item.categoryEnum.localizedName)")
             DetailRow(label: "field.location", value: "\(item.storageLocationEnum.emoji) \(item.storageLocationEnum.localizedName)")
             DetailRow(label: "field.quantity", value: "\(item.quantity.formatted()) \(item.unit)")
@@ -117,40 +127,45 @@ struct FoodDetailView: View {
     // MARK: - Quantity Adjuster
 
     private var quantityAdjuster: some View {
-        HStack {
-            Text("field.quantity")
-                .fontWeight(.medium)
-            Spacer()
-            Button {
-                adjustQuantity(by: -1)
-            } label: {
-                Image(systemName: "minus.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(item.quantity > 1 ? .blue : .secondary)
-            }
-            .disabled(item.quantity <= 1)
-            .accessibilityLabel("button.decreaseQuantity")
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            AppSectionHeader(title: "section.quantity")
 
-            Text("\(item.quantity.formatted()) \(item.unit)")
-                .font(.headline)
-                .frame(minWidth: 60, alignment: .center)
+            HStack {
+                Text("field.quantity")
+                    .font(.headline)
+                Spacer()
+                Button {
+                    adjustQuantity(by: -1)
+                } label: {
+                    Image(systemName: "minus.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(item.quantity > 1 ? .accentColor : .secondary)
+                }
+                .disabled(item.quantity <= 1)
+                .accessibilityLabel("button.decreaseQuantity")
 
-            Button {
-                adjustQuantity(by: 1)
-            } label: {
-                Image(systemName: "plus.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(.blue)
+                Text("\(item.quantity.formatted()) \(item.unit)")
+                    .font(.headline)
+                    .frame(minWidth: 72, alignment: .center)
+
+                Button {
+                    adjustQuantity(by: 1)
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.accentColor)
+                }
+                .accessibilityLabel("button.increaseQuantity")
             }
-            .accessibilityLabel("button.increaseQuantity")
         }
+        .appCardStyle()
     }
 
     // MARK: - Action Buttons
 
     private var actionButtons: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 10) {
+        VStack(spacing: AppSpacing.medium) {
+            HStack(spacing: AppSpacing.medium) {
                 Button {
                     archive(as: .eaten)
                 } label: {
@@ -158,7 +173,7 @@ struct FoodDetailView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.green)
+                .tint(Color(uiColor: .systemGreen))
                 .accessibilityLabel("button.markEaten")
 
                 Button {
@@ -168,7 +183,7 @@ struct FoodDetailView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.orange)
+                .tint(Color(uiColor: .systemOrange))
                 .accessibilityLabel("button.markDiscarded")
             }
 
@@ -181,6 +196,7 @@ struct FoodDetailView: View {
             .buttonStyle(.bordered)
             .accessibilityLabel("button.delete")
         }
+        .appCardStyle()
     }
 
     // MARK: - Helpers
@@ -214,9 +230,9 @@ struct DetailRow: View {
     let value: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
             Text(LocalizedStringKey(label))
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(.secondary)
             Text(value)
                 .font(.subheadline)

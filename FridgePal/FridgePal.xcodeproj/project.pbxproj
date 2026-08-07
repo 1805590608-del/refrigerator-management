@@ -26,6 +26,7 @@
 		51F0E97A3EFE4D0EBBB8A7B9 /* FoodDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE263CEA76540118BE4C099 /* FoodDetailView.swift */; };
 		9A0561CB770B4CCE877AE8D2 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B73539DFC1C40E49C561736 /* HistoryView.swift */; };
 		D228E955E7E84CEB886E0589 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F846B7DBA22B4C6E97FB3047 /* SettingsView.swift */; };
+		4A5F3426E31E4AB5B1393F40 /* UIStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B7E9414EF544D6A37EFA38 /* UIStyle.swift */; };
 		3C5B6B2123434CD3834CB526 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A812125355E0464E9D0D40F5 /* Localizable.strings */; };
 		17A30C9B20EA4E2FAEA85EF7 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 999101407B724A598560A98A /* Localizable.strings */; };
 		C9EE38200BC54216AFEE4C0B /* FridgePalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B16D1AEC16497780306B24 /* FridgePalTests.swift */; };
@@ -52,6 +53,7 @@
 		3CE263CEA76540118BE4C099 /* FoodDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodDetailView.swift; sourceTree = "<group>"; };
 		6B73539DFC1C40E49C561736 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		F846B7DBA22B4C6E97FB3047 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		59B7E9414EF544D6A37EFA38 /* UIStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIStyle.swift; sourceTree = "<group>"; };
 		A812125355E0464E9D0D40F5 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
 		999101407B724A598560A98A /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
 
@@ -95,6 +97,7 @@
 				3CE263CEA76540118BE4C099,
 				6B73539DFC1C40E49C561736,
 				F846B7DBA22B4C6E97FB3047,
+				59B7E9414EF544D6A37EFA38,
 				C041A4C013A940EDBD6B50C8,
 				10257CD36306467D9C84467F /* (already listed) */,
 			);
@@ -226,7 +229,7 @@
 				51F0E97A3EFE4D0EBBB8A7B9 /* FoodDetailView.swift in Sources */,
 				9A0561CB770B4CCE877AE8D2 /* HistoryView.swift in Sources */,
 				D228E955E7E84CEB886E0589 /* SettingsView.swift in Sources */,
-
+				4A5F3426E31E4AB5B1393F40 /* UIStyle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

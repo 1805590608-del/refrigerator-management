@@ -39,27 +39,18 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
-                    // Sync status banner
+                VStack(alignment: .leading, spacing: AppSpacing.xLarge) {
                     SyncStatusBanner(status: cloudKitService.syncStatus)
-                        .padding(.horizontal)
-
-                    // Summary cards
                     summaryCards
-                        .padding(.horizontal)
-
-                    // Location breakdown
                     locationBreakdown
-                        .padding(.horizontal)
-
-                    // Recent items
                     recentSection
-                        .padding(.horizontal)
                 }
-                .padding(.vertical)
+                .padding(.horizontal, AppSpacing.large)
+                .padding(.vertical, AppSpacing.large)
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("nav.home")
+            .navigationBarTitleDisplayMode(.large)
             .searchable(text: $searchText, prompt: "search.prompt")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -83,23 +74,23 @@ struct HomeView: View {
     // MARK: - Sub-views
 
     private var summaryCards: some View {
-        HStack(spacing: 12) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: AppSpacing.medium)], spacing: AppSpacing.medium) {
             SummaryCard(
                 title: NSLocalizedString("home.total", comment: ""),
                 count: totalCount,
-                color: .blue,
+                color: Color(uiColor: .systemBlue),
                 icon: "archivebox.fill"
             )
             SummaryCard(
                 title: NSLocalizedString("home.expiringSoon", comment: ""),
                 count: expiringSoonCount,
-                color: .orange,
+                color: Color(uiColor: .systemOrange),
                 icon: "exclamationmark.circle.fill"
             )
             SummaryCard(
                 title: NSLocalizedString("home.expired", comment: ""),
                 count: expiredCount,
-                color: .red,
+                color: Color(uiColor: .systemRed),
                 icon: "xmark.circle.fill"
             )
         }
@@ -107,11 +98,8 @@ struct HomeView: View {
 
     private var locationBreakdown: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("home.byLocation")
-                .font(.headline)
-                .accessibilityAddTraits(.isHeader)
-
-            HStack(spacing: 12) {
+            AppSectionHeader(title: "home.byLocation")
+            HStack(spacing: AppSpacing.medium) {
                 LocationCard(location: .fridge,  count: fridgeItems.count)
                 LocationCard(location: .freezer, count: freezerItems.count)
                 LocationCard(location: .pantry,  count: pantryItems.count)
@@ -121,23 +109,31 @@ struct HomeView: View {
 
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("home.recentItems")
-                .font(.headline)
-                .accessibilityAddTraits(.isHeader)
+            AppSectionHeader(title: "home.recentItems")
 
             if recentItems.isEmpty {
                 EmptyStateView(message: "empty.noItems", icon: "refrigerator")
                     .frame(maxWidth: .infinity)
-                    .padding()
+                    .appCardStyle()
             } else {
-                ForEach(recentItems) { item in
-                    NavigationLink(destination: FoodDetailView(item: item)
-                        .onDisappear { loadItems() }
-                    ) {
-                        FoodRowView(item: item)
+                VStack(spacing: 0) {
+                    ForEach(Array(recentItems.enumerated()), id: \.element.id) { index, item in
+                        NavigationLink(destination: FoodDetailView(item: item)
+                            .onDisappear { loadItems() }
+                        ) {
+                            FoodRowView(item: item)
+                                .padding(.horizontal, AppSpacing.large)
+                                .padding(.vertical, AppSpacing.medium)
+                        }
+                        .buttonStyle(.plain)
+
+                        if index < recentItems.count - 1 {
+                            Divider()
+                                .padding(.leading, AppSpacing.large + AppSizing.defaultThumbnailSize + AppSpacing.medium)
+                        }
                     }
-                    .buttonStyle(.plain)
                 }
+                .appCardStyle(padding: 0)
             }
         }
     }
@@ -156,23 +152,23 @@ struct SummaryCard: View {
     let icon: String
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: AppSpacing.small) {
             Image(systemName: icon)
-                .font(.title2)
+                .font(.headline)
                 .foregroundStyle(color)
+                .frame(width: 36, height: 36)
+                .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
             Text("\(count)")
-                .font(.title)
-                .fontWeight(.bold)
-                .foregroundStyle(color)
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(.primary)
             Text(title)
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+                .multilineTextAlignment(.leading)
         }
         .frame(maxWidth: .infinity)
-        .padding()
-        .background(.background, in: RoundedRectangle(cornerRadius: 14))
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .frame(minHeight: 132, alignment: .topLeading)
+        .appCardStyle()
         .accessibilityElement(children: .combine)
     }
 }
@@ -184,20 +180,18 @@ struct LocationCard: View {
     let count: Int
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: AppSpacing.small) {
             Text(location.emoji)
                 .font(.title2)
             Text("\(count)")
-                .font(.headline)
-                .fontWeight(.bold)
+                .font(.headline.weight(.semibold))
             Text(location.localizedName)
-                .font(.caption2)
+                .font(.footnote)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(.background, in: RoundedRectangle(cornerRadius: 12))
-        .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 1)
+        .padding(.vertical, AppSpacing.medium)
+        .appCardStyle()
         .accessibilityElement(children: .combine)
     }
 }
@@ -212,35 +206,31 @@ struct SyncStatusBanner: View {
         case .idle, .synced:
             EmptyView()
         case .syncing:
-            HStack {
-                ProgressView()
-                    .scaleEffect(0.8)
-                Text("sync.syncing")
-                    .font(.caption)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(.blue.opacity(0.1), in: Capsule())
+            StatusBadge(
+                title: NSLocalizedString("sync.syncing", comment: ""),
+                systemImage: "arrow.triangle.2.circlepath",
+                tint: .accentColor
+            )
         case .error(let msg):
-            HStack {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.red)
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                StatusBadge(
+                    title: NSLocalizedString("alert.errorTitle", comment: ""),
+                    systemImage: "exclamationmark.triangle.fill",
+                    tint: Color(uiColor: .systemRed)
+                )
                 Text(msg)
-                    .font(.caption)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(.red.opacity(0.1), in: Capsule())
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .appCardStyle()
         case .notLoggedIn:
-            HStack {
-                Image(systemName: "icloud.slash.fill")
-                    .foregroundStyle(.orange)
-                Text("sync.notLoggedIn")
-                    .font(.caption)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(.orange.opacity(0.1), in: Capsule())
+            StatusBadge(
+                title: NSLocalizedString("sync.notLoggedIn", comment: ""),
+                systemImage: "icloud.slash.fill",
+                tint: Color(uiColor: .systemOrange)
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
@@ -252,16 +242,19 @@ struct EmptyStateView: View {
     let icon: String
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: AppSpacing.medium) {
             Image(systemName: icon)
-                .font(.system(size: 40))
+                .font(.system(size: 28, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .frame(width: 60, height: 60)
+                .background(Color(uiColor: .tertiarySystemGroupedBackground), in: Circle())
             Text(LocalizedStringKey(message))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
-        .padding()
+        .padding(AppSpacing.xxLarge)
+        .frame(maxWidth: .infinity)
     }
 }
 
