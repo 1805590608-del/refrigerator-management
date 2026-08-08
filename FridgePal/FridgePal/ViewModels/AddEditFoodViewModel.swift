@@ -171,15 +171,15 @@ final class AddEditFoodViewModel: ObservableObject {
     }
 
     @discardableResult
-    func save(advanceDays: [Int]) throws -> Bool {
+    func save(settings: ReminderSettings = .current()) throws -> Bool {
         guard let repository else {
             throw SaveError.repositoryUnavailable
         }
-        return try save(to: repository, advanceDays: advanceDays)
+        return try save(to: repository, settings: settings)
     }
 
     @discardableResult
-    func save(to repository: FoodRepositoryProtocol, advanceDays: [Int]) throws -> Bool {
+    func save(to repository: FoodRepositoryProtocol, settings: ReminderSettings = .current()) throws -> Bool {
         guard validate() else { return false }
 
         isSaving = true
@@ -191,13 +191,10 @@ final class AddEditFoodViewModel: ObservableObject {
         if let existingItem = item {
             draft.apply(to: existingItem)
             try repository.save(existingItem)
-            notificationService.cancelReminders(for: existingItem, advanceDays: advanceDays)
-            notificationService.scheduleReminders(for: existingItem, advanceDays: advanceDays)
         } else {
-            let newItem = draft.makeFoodItem()
-            try repository.save(newItem)
-            notificationService.scheduleReminders(for: newItem, advanceDays: advanceDays)
+            try repository.save(draft.makeFoodItem())
         }
+        notificationService.refreshSchedule(using: repository, settings: settings)
         return true
     }
 

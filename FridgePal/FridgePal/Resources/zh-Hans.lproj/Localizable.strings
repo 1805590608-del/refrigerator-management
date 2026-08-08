@@ -190,6 +190,10 @@
 "settings.remind1" = "提前1天提醒";
 "settings.remind3" = "提前3天提醒";
 "settings.remind7" = "提前7天提醒";
+"settings.groupedDigest" = "每日汇总提醒";
+"settings.reminderTime" = "提醒时间";
+"settings.groupedDigest.footer" = "每天只发送一条提醒，汇总当天需要处理的食物；今天或明天过期时会使用更紧急的文案。";
+"settings.perItemReminders.footer" = "每件食物在所选的每个提前天数都会单独提醒，一天可能收到多条通知。";
 "settings.icloud" = "iCloud 同步";
 "settings.syncStatus" = "同步状态";
 "settings.checkSync" = "刷新";
@@ -219,7 +223,14 @@
 
 /* 通知 */
 "notification.title" = "食物即将过期";
+"notification.title.urgent" = "今天就吃掉吧";
+"notification.title.digest" = "冰箱每日提醒";
 "notification.body.format" = "「%@」将在 %d 天后过期。";
+"notification.body.today.format" = "「%@」今天过期，请尽快食用。";
+"notification.body.tomorrow.format" = "「%@」明天过期。";
+"notification.body.digest.format" = "有 %1$d 件食物即将过期：%2$@";
+"notification.body.digest.urgent.format" = "有 %1$d 件食物今天或明天过期：%2$@";
+"notification.body.namesOverflow.format" = "%1$@ 等 %2$d 件";
 
 /* 错误 */
 "error.cameraPermission" = "需要相机权限。请在「设置」>「隐私」>「相机」中开启。";

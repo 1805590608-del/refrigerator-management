@@ -3,7 +3,6 @@ import SwiftUI
 struct FoodDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @AppStorage("reminderDays") private var reminderDaysRaw: String = "1,3,7"
 
     let item: FoodItem
 
@@ -276,16 +275,16 @@ struct FoodDetailView: View {
     }
 
     private func archive(as status: FoodStatus) {
-        let reminderDays = reminderDaysRaw.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
-        NotificationService.shared.cancelReminders(for: item, advanceDays: reminderDays)
-        try? FoodRepository(context: modelContext).archiveItem(item, status: status)
+        let repository = FoodRepository(context: modelContext)
+        try? repository.archiveItem(item, status: status)
+        NotificationService.shared.refreshSchedule(using: repository)
         dismiss()
     }
 
     private func deleteItem() {
-        let reminderDays = reminderDaysRaw.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
-        NotificationService.shared.cancelReminders(for: item, advanceDays: reminderDays)
-        try? FoodRepository(context: modelContext).delete(item)
+        let repository = FoodRepository(context: modelContext)
+        try? repository.delete(item)
+        NotificationService.shared.refreshSchedule(using: repository)
         dismiss()
     }
 }

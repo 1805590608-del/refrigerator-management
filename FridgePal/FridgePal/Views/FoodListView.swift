@@ -4,7 +4,6 @@ import SwiftData
 struct FoodListView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage("preferGridView") private var preferGridView: Bool = false
-    @AppStorage("reminderDays") private var reminderDaysRaw: String = "1,3,7"
     @State private var items: [FoodItem] = []
     @State private var searchText = ""
     @State private var sortOption: SortOption = .expirationDate
@@ -14,10 +13,6 @@ struct FoodListView: View {
     @State private var showAddFood = false
     @State private var itemToDelete: FoodItem? = nil
     @State private var showDeleteAlert = false
-
-    private var reminderDays: [Int] {
-        reminderDaysRaw.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
-    }
 
     private var repository: FoodRepository { FoodRepository(context: modelContext) }
 
@@ -234,15 +229,15 @@ struct FoodListView: View {
     }
 
     private func deleteItem(_ item: FoodItem) {
-        NotificationService.shared.cancelReminders(for: item, advanceDays: reminderDays)
         try? repository.delete(item)
         loadItems()
+        NotificationService.shared.refreshSchedule(using: repository)
     }
 
     private func markEaten(_ item: FoodItem) {
-        NotificationService.shared.cancelReminders(for: item, advanceDays: reminderDays)
         try? repository.archiveItem(item, status: .eaten)
         loadItems()
+        NotificationService.shared.refreshSchedule(using: repository)
     }
 }
 

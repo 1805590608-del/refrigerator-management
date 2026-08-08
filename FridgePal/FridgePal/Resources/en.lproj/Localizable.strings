@@ -189,6 +189,10 @@
 "settings.remind1" = "1 Day Before";
 "settings.remind3" = "3 Days Before";
 "settings.remind7" = "7 Days Before";
+"settings.groupedDigest" = "Daily Summary";
+"settings.reminderTime" = "Reminder Time";
+"settings.groupedDigest.footer" = "One reminder per day lists everything expiring then, with urgent wording when food expires today or tomorrow.";
+"settings.perItemReminders.footer" = "Each item gets its own reminder on every selected day, which can mean several notifications per day.";
 "settings.icloud" = "iCloud Sync";
 "settings.syncStatus" = "Sync Status";
 "settings.checkSync" = "Refresh";
@@ -218,7 +222,14 @@
 
 /* Notifications */
 "notification.title" = "Food Expiring Soon";
+"notification.title.urgent" = "Use It Today";
+"notification.title.digest" = "Your Fridge Check-In";
 "notification.body.format" = "%@ expires in %d day(s).";
+"notification.body.today.format" = "%@ expires today — use it now.";
+"notification.body.tomorrow.format" = "%@ expires tomorrow.";
+"notification.body.digest.format" = "%1$d items are running out: %2$@";
+"notification.body.digest.urgent.format" = "%1$d items expire today or tomorrow: %2$@";
+"notification.body.namesOverflow.format" = "%1$@ and %2$d more";
 
 /* Errors */
 "error.cameraPermission" = "Camera access is required. Please enable it in Settings → Privacy → Camera.";

@@ -14,10 +14,10 @@ A full-featured iOS app for tracking household food inventory, expiration dates,
 | **Quick Add** | Add an active item again from inventory details or history with every field prefilled and editable |
 | **Shopping List** | Save active or archived foods to buy again; mark entries purchased, move them back to “To Buy,” or remove them |
 | **Food Detail** | Full info view, quantity ±1 adjuster, mark eaten/discarded, delete with confirmation |
-| **Expiration Reminders** | Local push notifications 1/3/7 days before expiry, configurable in Settings |
+| **Expiration Reminders** | Local notifications 1/3/7 days before expiry, grouped into one daily summary at a time you pick, with urgent wording for food expiring today or tomorrow |
 | **iCloud Sync** | SwiftData + CloudKit private database; offline-first, auto-sync on reconnect |
 | **History** | Eaten/discarded/expired archive; statistics and waste insights by time range (waste ratio, most-wasted category, most-wasted location); bulk clear |
-| **Settings** | Notification toggles, iCloud status check, list/grid preference, appearance |
+| **Settings** | Reminder days, daily-summary toggle, reminder time, iCloud status check, list/grid preference, appearance |
 | **Localization** | English (en) + Simplified Chinese (zh-Hans) |
 | **Accessibility** | VoiceOver labels, Dynamic Type, Dark Mode |
 
@@ -41,7 +41,8 @@ FridgePal/
     │   ├── FoodRepository.swift    # Inventory CRUD + archive operations
     │   └── ShoppingRepository.swift # Shopping-list persistence
     ├── Services/
-    │   ├── NotificationService.swift   # Local push notification scheduling
+    │   ├── NotificationService.swift   # Local notification scheduling
+    │   ├── ReminderPlanner.swift       # Reminder settings + grouped reminder planning
     │   ├── CloudKitService.swift       # iCloud account status + sync state
     │   └── ImageService.swift          # Photo resize/compress (max 1600px, JPEG 0.75)
     ├── ViewModels/
@@ -141,7 +142,8 @@ Tests cover:
 - `HomeAttentionItemsTests` — urgent grouping, priority order, and all-clear behavior
 - `FoodItemStatusTests` — status enum roundtrips, graceful unknown values
 - `ImageServiceTests` — resize/compress behavior
-- `NotificationServiceTests` — schedule/cancel without crash
+- `ReminderSettingsTests` — reminder preference parsing, normalization, and defaults
+- `ReminderPlannerTests` — daily digest grouping, urgency, ordering, and pending-notification limit
 - `HistoryRecordTests` — archive creation from FoodItem
 - `WasteInsightsTests` — waste ratio, most-wasted category, and most-wasted location aggregations
 - `FoodFormDraftTests` — repeat-entry prefill, source independence, and new active-item creation

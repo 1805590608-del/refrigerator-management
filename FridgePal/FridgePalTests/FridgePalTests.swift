@@ -198,29 +198,182 @@ final class ImageServiceTests: XCTestCase {
     }
 }
 
-// MARK: - Notification Identifier Tests
+// MARK: - Reminder Settings Tests
 
-final class NotificationServiceTests: XCTestCase {
+final class ReminderSettingsTests: XCTestCase {
 
-    func testScheduleDoesNotCrashForActiveItem() {
-        let item = FoodItem(
-            name: "Milk",
-            expirationDate: Calendar.current.date(byAdding: .day, value: 5, to: Date())!
-        )
-        // Just ensure no crash
-        NotificationService.shared.scheduleReminders(for: item, advanceDays: [1, 3, 7])
-        NotificationService.shared.cancelReminders(for: item)
+    func testAdvanceDaysAreNormalized() {
+        let settings = ReminderSettings(rawAdvanceDays: "7, 3,3, 1, oops, -2")
+        XCTAssertEqual(settings.advanceDays, [1, 3, 7])
+        XCTAssertEqual(settings.rawAdvanceDays, "1,3,7")
     }
 
-    func testScheduleSkipsInactiveItem() {
-        let item = FoodItem(
-            name: "Milk",
-            expirationDate: Calendar.current.date(byAdding: .day, value: 5, to: Date())!
+    func testHourIsClamped() {
+        XCTAssertEqual(ReminderSettings(hour: 99).hour, 23)
+        XCTAssertEqual(ReminderSettings(hour: -5).hour, 0)
+    }
+
+    func testCurrentFallsBackToDefaultsWhenUnset() {
+        let defaults = UserDefaults(suiteName: "ReminderSettingsTests.empty")!
+        defaults.removePersistentDomain(forName: "ReminderSettingsTests.empty")
+        let settings = ReminderSettings.current(defaults: defaults)
+        XCTAssertEqual(settings.advanceDays, ReminderSettings.defaultAdvanceDays)
+        XCTAssertEqual(settings.hour, ReminderSettings.defaultHour)
+        XCTAssertTrue(settings.groupedDigest)
+    }
+
+    func testCurrentReadsStoredValues() {
+        let suite = "ReminderSettingsTests.stored"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+        defaults.set("1,3", forKey: ReminderSettings.StorageKey.advanceDays)
+        defaults.set(false, forKey: ReminderSettings.StorageKey.groupedDigest)
+        defaults.set(20, forKey: ReminderSettings.StorageKey.hour)
+
+        let settings = ReminderSettings.current(defaults: defaults)
+        XCTAssertEqual(settings.advanceDays, [1, 3])
+        XCTAssertFalse(settings.groupedDigest)
+        XCTAssertEqual(settings.hour, 20)
+
+        defaults.removePersistentDomain(forName: suite)
+    }
+}
+
+// MARK: - Reminder Planner Tests
+
+final class ReminderPlannerTests: XCTestCase {
+
+    private var calendar: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        return calendar
+    }()
+
+    private func date(_ value: String) -> Date {
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        return formatter.date(from: value)!
+    }
+
+    private func candidate(_ name: String, _ expiration: String) -> ReminderCandidate {
+        ReminderCandidate(id: UUID(), name: name, expirationDate: date(expiration))
+    }
+
+    func testGroupedPlanMergesSameDayRemindersIntoOneDigest() {
+        let milk = candidate("Milk", "2026-01-08 00:00")
+        let eggs = candidate("Eggs", "2026-01-08 00:00")
+
+        let plan = ReminderPlanner.plan(
+            candidates: [milk, eggs],
+            settings: ReminderSettings(advanceDays: [1, 3], groupedDigest: true, hour: 9),
+            now: date("2026-01-01 08:00"),
+            calendar: calendar
         )
-        item.statusEnum = .eaten
-        // Should not schedule (isActive == false)
-        NotificationService.shared.scheduleReminders(for: item, advanceDays: [1, 3, 7])
-        // No crash + no pending notifications for non-active item
+
+        XCTAssertEqual(plan.count, 2)
+        XCTAssertEqual(plan.map(\.identifier), ["fridge_digest_20260105", "fridge_digest_20260107"])
+        XCTAssertEqual(plan.map { $0.itemIDs.count }, [2, 2])
+        XCTAssertEqual(Set(plan[0].itemIDs), Set([milk.id, eggs.id]))
+    }
+
+    func testGroupedPlanIsSortedAndFlagsUrgency() {
+        let plan = ReminderPlanner.plan(
+            candidates: [candidate("Milk", "2026-01-08 00:00"), candidate("Bread", "2026-01-02 00:00")],
+            settings: ReminderSettings(advanceDays: [1, 7], groupedDigest: true, hour: 9),
+            now: date("2026-01-01 08:00"),
+            calendar: calendar
+        )
+
+        XCTAssertEqual(plan.map(\.triggerDate), [date("2026-01-01 09:00"), date("2026-01-07 09:00")])
+        // Bread expires tomorrow, so the shared Jan 1 digest is urgent.
+        XCTAssertEqual(plan[0].daysRemaining, 1)
+        XCTAssertTrue(plan[0].isUrgent)
+        XCTAssertTrue(plan[1].isUrgent)
+    }
+
+    func testGroupedPlanOrdersItemsByUrgency() {
+        let bread = candidate("Bread", "2026-01-02 00:00")
+        let milk = candidate("Milk", "2026-01-08 00:00")
+
+        let plan = ReminderPlanner.plan(
+            candidates: [milk, bread],
+            settings: ReminderSettings(advanceDays: [1, 7], groupedDigest: true, hour: 9),
+            now: date("2026-01-01 08:00"),
+            calendar: calendar
+        )
+
+        XCTAssertEqual(plan[0].itemIDs, [bread.id, milk.id])
+    }
+
+    func testPastRemindersAreSkipped() {
+        let plan = ReminderPlanner.plan(
+            candidates: [candidate("Milk", "2026-01-08 00:00")],
+            settings: ReminderSettings(advanceDays: [1, 3, 7], groupedDigest: true, hour: 9),
+            now: date("2026-01-05 12:00"),
+            calendar: calendar
+        )
+
+        XCTAssertEqual(plan.map(\.identifier), ["fridge_digest_20260107"])
+    }
+
+    func testUngroupedPlanKeepsPerItemIdentifiers() {
+        let milk = candidate("Milk", "2026-01-08 00:00")
+
+        let plan = ReminderPlanner.plan(
+            candidates: [milk],
+            settings: ReminderSettings(advanceDays: [1, 3], groupedDigest: false, hour: 9),
+            now: date("2026-01-01 08:00"),
+            calendar: calendar
+        )
+
+        XCTAssertEqual(
+            plan.map(\.identifier),
+            [
+                ReminderPlanner.itemIdentifier(for: milk.id, days: 3),
+                ReminderPlanner.itemIdentifier(for: milk.id, days: 1)
+            ]
+        )
+        XCTAssertEqual(plan.map { $0.itemIDs }, [[milk.id], [milk.id]])
+    }
+
+    func testEmptyAdvanceDaysProducesNoReminders() {
+        let plan = ReminderPlanner.plan(
+            candidates: [candidate("Milk", "2026-01-08 00:00")],
+            settings: ReminderSettings(advanceDays: [], groupedDigest: true, hour: 9),
+            now: date("2026-01-01 08:00"),
+            calendar: calendar
+        )
+        XCTAssertTrue(plan.isEmpty)
+    }
+
+    func testPlanStaysWithinPendingNotificationLimit() {
+        let candidates = (0..<80).map { index in
+            ReminderCandidate(
+                id: UUID(),
+                name: "Item \(index)",
+                expirationDate: calendar.date(byAdding: .day, value: index, to: date("2026-01-10 00:00"))!
+            )
+        }
+
+        let plan = ReminderPlanner.plan(
+            candidates: candidates,
+            settings: ReminderSettings(advanceDays: [1, 3, 7], groupedDigest: false, hour: 9),
+            now: date("2026-01-01 08:00"),
+            calendar: calendar
+        )
+
+        XCTAssertEqual(plan.count, ReminderPlanner.maxPendingReminders)
+        // The soonest reminders survive the cap.
+        XCTAssertEqual(plan.first?.triggerDate, date("2026-01-03 09:00"))
+    }
+
+    func testDigestIdentifierIsStablePerDay() {
+        XCTAssertEqual(
+            ReminderPlanner.digestIdentifier(for: date("2026-02-09 09:00"), calendar: calendar),
+            "fridge_digest_20260209"
+        )
     }
 }
 

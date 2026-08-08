@@ -4,6 +4,8 @@ import SwiftData
 struct SettingsView: View {
     @EnvironmentObject private var cloudKitService: CloudKitService
     @AppStorage("reminderDays") private var reminderDaysRaw: String = "1,3,7"
+    @AppStorage("reminderGroupedDigest") private var groupedDigest: Bool = true
+    @AppStorage("reminderHour") private var reminderHour: Int = 9
     @AppStorage("preferGridView") private var preferGridView: Bool = false
     @AppStorage("colorScheme") private var colorSchemeRaw: String = "system"
     @Environment(\.modelContext) private var modelContext
@@ -46,11 +48,32 @@ struct SettingsView: View {
                 .onChange(of: remind3) { _, _ in saveReminderDays() }
             Toggle("settings.remind7", isOn: $remind7)
                 .onChange(of: remind7) { _, _ in saveReminderDays() }
+
+            Toggle("settings.groupedDigest", isOn: $groupedDigest)
+                .onChange(of: groupedDigest) { _, newValue in
+                    refreshReminders(groupedDigest: newValue)
+                }
+
+            Picker("settings.reminderTime", selection: $reminderHour) {
+                ForEach(0..<24, id: \.self) { hour in
+                    Text(Self.hourLabel(hour)).tag(hour)
+                }
+            }
+            .onChange(of: reminderHour) { _, newValue in
+                refreshReminders(hour: newValue)
+            }
         } header: {
             Text("settings.notifications")
                 .textCase(nil)
                 .font(.footnote.weight(.semibold))
+        } footer: {
+            Text(reminderExplanation)
+                .font(.footnote)
         }
+    }
+
+    private var reminderExplanation: LocalizedStringKey {
+        groupedDigest ? "settings.groupedDigest.footer" : "settings.perItemReminders.footer"
     }
 
     private var syncSection: some View {
@@ -158,7 +181,32 @@ struct SettingsView: View {
         if remind1 { days.append(1) }
         if remind3 { days.append(3) }
         if remind7 { days.append(7) }
-        reminderDaysRaw = days.map { "\($0)" }.joined(separator: ",")
+        let raw = days.map { "\($0)" }.joined(separator: ",")
+        reminderDaysRaw = raw
+        refreshReminders(rawAdvanceDays: raw)
+    }
+
+    /// Reminder settings apply to the whole inventory, so rebuild the schedule
+    /// as soon as the user changes them.
+    private func refreshReminders(
+        rawAdvanceDays: String? = nil,
+        groupedDigest: Bool? = nil,
+        hour: Int? = nil
+    ) {
+        let settings = ReminderSettings(
+            rawAdvanceDays: rawAdvanceDays ?? reminderDaysRaw,
+            groupedDigest: groupedDigest ?? self.groupedDigest,
+            hour: hour ?? reminderHour
+        )
+        NotificationService.shared.refreshSchedule(
+            using: FoodRepository(context: modelContext),
+            settings: settings
+        )
+    }
+
+    private static func hourLabel(_ hour: Int) -> String {
+        let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) ?? Date()
+        return date.formatted(date: .omitted, time: .shortened)
     }
 
     private func clearHistory() {

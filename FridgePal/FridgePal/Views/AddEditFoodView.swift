@@ -5,7 +5,6 @@ import AVFoundation
 struct AddEditFoodView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @AppStorage("reminderDays") private var reminderDaysRaw: String = "1,3,7"
 
     @StateObject private var viewModel: AddEditFoodViewModel
 
@@ -19,10 +18,6 @@ struct AddEditFoodView: View {
         _viewModel = StateObject(
             wrappedValue: AddEditFoodViewModel(item: item, prefill: prefill)
         )
-    }
-
-    private var reminderDays: [Int] {
-        reminderDaysRaw.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
     }
 
     private let units = ["item", "box", "bag", "bottle", "g", "kg", "oz", "lb", "L", "mL", "pack", "can", "piece"]
@@ -228,10 +223,7 @@ struct AddEditFoodView: View {
 
     private func save() {
         do {
-            if try viewModel.save(
-                to: FoodRepository(context: modelContext),
-                advanceDays: reminderDays
-            ) {
+            if try viewModel.save(to: FoodRepository(context: modelContext)) {
                 dismiss()
             }
         } catch {
