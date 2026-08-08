@@ -1,13 +1,10 @@
 import SwiftUI
+import SwiftData
 
 struct ShoppingListView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var items: [ShoppingItem] = []
+    @Query(sort: \ShoppingItem.createdAt, order: .reverse) private var items: [ShoppingItem]
     @State private var errorMessage: String?
-
-    private var repository: ShoppingRepository {
-        ShoppingRepository(context: modelContext)
-    }
 
     private var itemsToBuy: [ShoppingItem] {
         items.filter { !$0.isCompleted }
@@ -40,7 +37,6 @@ struct ShoppingListView: View {
             .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("nav.shopping")
             .navigationBarTitleDisplayMode(.large)
-            .onAppear(perform: loadItems)
             .alert("alert.errorTitle", isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
@@ -72,19 +68,10 @@ struct ShoppingListView: View {
         }
     }
 
-    private func loadItems() {
-        do {
-            items = try repository.fetchAll()
-        } catch {
-            items = []
-            errorMessage = error.localizedDescription
-        }
-    }
-
     private func toggleCompletion(for item: ShoppingItem) {
         do {
-            try repository.setCompleted(item, isCompleted: !item.isCompleted)
-            loadItems()
+            try ShoppingRepository(context: modelContext)
+                .setCompleted(item, isCompleted: !item.isCompleted)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -92,8 +79,7 @@ struct ShoppingListView: View {
 
     private func delete(_ item: ShoppingItem) {
         do {
-            try repository.delete(item)
-            loadItems()
+            try ShoppingRepository(context: modelContext).delete(item)
         } catch {
             errorMessage = error.localizedDescription
         }

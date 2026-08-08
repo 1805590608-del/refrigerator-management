@@ -5,10 +5,8 @@ struct HistoryView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var records: [HistoryRecord] = []
     @State private var selectedRange: HistoryViewModel.TimeRange = .month
-    @State private var showClearAlert = false
     @State private var recordToRepeat: HistoryRecord?
-    @State private var shoppingAlertTitle = LocalizedStringKey("shopping.addedTitle")
-    @State private var shoppingMessage: String?
+    @State private var activeAlert: HistoryAlert?
 
     private var repo: FoodRepository { FoodRepository(context: modelContext) }
 
@@ -56,14 +54,6 @@ struct HistoryView: View {
                     }
                     .listStyle(.insetGrouped)
                     .scrollContentBackground(.hidden)
-                    .alert(shoppingAlertTitle, isPresented: Binding(
-                        get: { shoppingMessage != nil },
-                        set: { if !$0 { shoppingMessage = nil } }
-                    )) {
-                        Button("button.ok") { shoppingMessage = nil }
-                    } message: {
-                        Text(shoppingMessage ?? "")
-                    }
                 }
             }
             .background(Color(uiColor: .systemGroupedBackground))
@@ -72,16 +62,38 @@ struct HistoryView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("button.clearAll", role: .destructive) {
-                        showClearAlert = true
+                        activeAlert = .clearConfirmation
                     }
                     .disabled(records.isEmpty)
                 }
             }
-            .alert("alert.clearHistoryTitle", isPresented: $showClearAlert) {
-                Button("button.clearAll", role: .destructive) { clearAll() }
-                Button("button.cancel", role: .cancel) {}
-            } message: {
-                Text("alert.clearHistoryMessage")
+            .alert(item: $activeAlert) { alert in
+                switch alert {
+                case .clearConfirmation:
+                    Alert(
+                        title: Text("alert.clearHistoryTitle"),
+                        message: Text("alert.clearHistoryMessage"),
+                        primaryButton: .destructive(Text("button.clearAll"), action: clearAll),
+                        secondaryButton: .cancel(Text("button.cancel"))
+                    )
+                case .shoppingAdded(let name):
+                    Alert(
+                        title: Text("shopping.addedTitle"),
+                        message: Text(
+                            String(
+                                format: NSLocalizedString("shopping.addedFormat", comment: ""),
+                                name
+                            )
+                        ),
+                        dismissButton: .default(Text("button.ok"))
+                    )
+                case .error(let message):
+                    Alert(
+                        title: Text("alert.errorTitle"),
+                        message: Text(message),
+                        dismissButton: .default(Text("button.ok"))
+                    )
+                }
             }
             .sheet(item: $recordToRepeat) { record in
                 AddEditFoodView(prefill: FoodFormDraft(historyRecord: record))
@@ -130,14 +142,9 @@ struct HistoryView: View {
     private func addToShoppingList(_ record: HistoryRecord) {
         do {
             try ShoppingRepository(context: modelContext).add(from: record)
-            shoppingAlertTitle = LocalizedStringKey("shopping.addedTitle")
-            shoppingMessage = String(
-                format: NSLocalizedString("shopping.addedFormat", comment: ""),
-                record.foodName
-            )
+            activeAlert = .shoppingAdded(record.foodName)
         } catch {
-            shoppingAlertTitle = LocalizedStringKey("alert.errorTitle")
-            shoppingMessage = error.localizedDescription
+            activeAlert = .error(error.localizedDescription)
         }
     }
 
@@ -149,6 +156,23 @@ struct HistoryView: View {
     private func clearAll() {
         try? repo.clearAllHistory()
         loadRecords()
+    }
+}
+
+private enum HistoryAlert: Identifiable {
+    case clearConfirmation
+    case shoppingAdded(String)
+    case error(String)
+
+    var id: String {
+        switch self {
+        case .clearConfirmation:
+            "clearConfirmation"
+        case .shoppingAdded(let name):
+            "shoppingAdded:\(name)"
+        case .error(let message):
+            "error:\(message)"
+        }
     }
 }
 

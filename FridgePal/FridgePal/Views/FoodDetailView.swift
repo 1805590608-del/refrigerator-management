@@ -9,9 +9,7 @@ struct FoodDetailView: View {
 
     @State private var showEdit = false
     @State private var showAddAgain = false
-    @State private var showDeleteAlert = false
-    @State private var shoppingAlertTitle = LocalizedStringKey("shopping.addedTitle")
-    @State private var shoppingMessage: String?
+    @State private var activeAlert: FoodDetailAlert?
 
     var body: some View {
         ScrollView {
@@ -48,11 +46,33 @@ struct FoodDetailView: View {
         .sheet(isPresented: $showAddAgain) {
             AddEditFoodView(prefill: FoodFormDraft(item: item))
         }
-        .alert("alert.deleteTitle", isPresented: $showDeleteAlert) {
-            Button("button.delete", role: .destructive) { deleteItem() }
-            Button("button.cancel", role: .cancel) {}
-        } message: {
-            Text("alert.deleteMessage")
+        .alert(item: $activeAlert) { alert in
+            switch alert {
+            case .deleteConfirmation:
+                Alert(
+                    title: Text("alert.deleteTitle"),
+                    message: Text("alert.deleteMessage"),
+                    primaryButton: .destructive(Text("button.delete"), action: deleteItem),
+                    secondaryButton: .cancel(Text("button.cancel"))
+                )
+            case .shoppingAdded(let name):
+                Alert(
+                    title: Text("shopping.addedTitle"),
+                    message: Text(
+                        String(
+                            format: NSLocalizedString("shopping.addedFormat", comment: ""),
+                            name
+                        )
+                    ),
+                    dismissButton: .default(Text("button.ok"))
+                )
+            case .error(let message):
+                Alert(
+                    title: Text("alert.errorTitle"),
+                    message: Text(message),
+                    dismissButton: .default(Text("button.ok"))
+                )
+            }
         }
     }
 
@@ -186,14 +206,6 @@ struct FoodDetailView: View {
                     )
                 )
             )
-            .alert(shoppingAlertTitle, isPresented: Binding(
-                get: { shoppingMessage != nil },
-                set: { if !$0 { shoppingMessage = nil } }
-            )) {
-                Button("button.ok") { shoppingMessage = nil }
-            } message: {
-                Text(shoppingMessage ?? "")
-            }
 
             Button {
                 showAddAgain = true
@@ -234,7 +246,7 @@ struct FoodDetailView: View {
             }
 
             Button(role: .destructive) {
-                showDeleteAlert = true
+                activeAlert = .deleteConfirmation
             } label: {
                 Label("button.delete", systemImage: "trash.fill")
                     .frame(maxWidth: .infinity)
@@ -250,14 +262,9 @@ struct FoodDetailView: View {
     private func addToShoppingList() {
         do {
             try ShoppingRepository(context: modelContext).add(from: item)
-            shoppingAlertTitle = LocalizedStringKey("shopping.addedTitle")
-            shoppingMessage = String(
-                format: NSLocalizedString("shopping.addedFormat", comment: ""),
-                item.name
-            )
+            activeAlert = .shoppingAdded(item.name)
         } catch {
-            shoppingAlertTitle = LocalizedStringKey("alert.errorTitle")
-            shoppingMessage = error.localizedDescription
+            activeAlert = .error(error.localizedDescription)
         }
     }
 
@@ -280,6 +287,23 @@ struct FoodDetailView: View {
         NotificationService.shared.cancelReminders(for: item, advanceDays: reminderDays)
         try? FoodRepository(context: modelContext).delete(item)
         dismiss()
+    }
+}
+
+private enum FoodDetailAlert: Identifiable {
+    case deleteConfirmation
+    case shoppingAdded(String)
+    case error(String)
+
+    var id: String {
+        switch self {
+        case .deleteConfirmation:
+            "deleteConfirmation"
+        case .shoppingAdded(let name):
+            "shoppingAdded:\(name)"
+        case .error(let message):
+            "error:\(message)"
+        }
     }
 }
 
