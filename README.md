@@ -178,6 +178,15 @@ Tests cover:
 
 ---
 
+## Design Documents
+
+| Document | Summary |
+|---|---|
+| [Shared Household / Collaboration Roadmap](docs/shared-household-roadmap.md) | Planned design for sharing one fridge between several people |
+| [Barcode + OCR Capture Spike](docs/barcode-ocr-capture-spike.md) | Discovery findings and recommendation for scan-assisted grocery entry |
+
+---
+
 ## Architecture
 
 ```
