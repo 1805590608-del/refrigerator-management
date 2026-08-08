@@ -19,6 +19,7 @@ struct FoodListView: View {
     @State private var bulkResultMessage: String? = nil
 
     private var repository: FoodRepository { FoodRepository(context: modelContext) }
+    private var shoppingRepository: ShoppingRepository { ShoppingRepository(context: modelContext) }
 
     private var displayedItems: [FoodItem] {
         var result = items
@@ -382,14 +383,11 @@ struct FoodListView: View {
             case .markDiscarded:
                 try repository.archiveItems(targets, status: .discarded)
             case .addToShoppingList:
-                try ShoppingRepository(context: modelContext).add(from: targets)
+                try shoppingRepository.add(from: targets)
             case .delete:
                 try repository.deleteItems(targets)
             }
-            bulkResultMessage = String(
-                format: NSLocalizedString("bulk.done.\(action.rawValue)Format", comment: ""),
-                targets.count
-            )
+            bulkResultMessage = action.completionMessage(count: targets.count)
         } catch {
             bulkResultMessage = error.localizedDescription
         }

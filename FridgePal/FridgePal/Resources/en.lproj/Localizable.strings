@@ -249,6 +249,7 @@
 "bulk.confirmTitle" = "Confirm Bulk Action";
 "bulk.confirm.markEatenFormat" = "Move %d item(s) to history as all gone?";
 "bulk.confirm.markDiscardedFormat" = "Move %d item(s) to history as discarded?";
+"bulk.confirm.addToShoppingListFormat" = "Add %d item(s) to your shopping list?";
 "bulk.confirm.deleteFormat" = "Permanently delete %d item(s)? This cannot be undone.";
 "bulk.doneTitle" = "Done";
 "bulk.done.markEatenFormat" = "%d item(s) marked as all gone.";

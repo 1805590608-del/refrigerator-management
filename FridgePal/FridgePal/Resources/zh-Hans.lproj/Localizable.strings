@@ -250,6 +250,7 @@
 "bulk.confirmTitle" = "确认批量操作";
 "bulk.confirm.markEatenFormat" = "将 %d 件食物标记为已吃完并移入历史记录？";
 "bulk.confirm.markDiscardedFormat" = "将 %d 件食物标记为已丢弃并移入历史记录？";
+"bulk.confirm.addToShoppingListFormat" = "将 %d 件食物加入购物清单？";
 "bulk.confirm.deleteFormat" = "永久删除 %d 件食物？此操作无法撤销。";
 "bulk.doneTitle" = "已完成";
 "bulk.done.markEatenFormat" = "已将 %d 件食物标记为已吃完。";

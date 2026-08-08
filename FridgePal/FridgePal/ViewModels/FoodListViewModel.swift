@@ -51,15 +51,42 @@ enum BulkAction: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Actions that remove foods from the fridge need an explicit confirmation.
+    /// True for actions that archive or permanently remove the selected foods.
     var isDestructive: Bool {
-        self != .addToShoppingList
+        switch self {
+        case .markEaten, .markDiscarded, .delete: return true
+        case .addToShoppingList:                  return false
+        }
     }
 
-    var requiresConfirmation: Bool { isDestructive }
+    /// Batches that take foods out of the fridge are confirmed before they run.
+    var requiresConfirmation: Bool {
+        switch self {
+        case .markEaten, .markDiscarded, .delete: return true
+        case .addToShoppingList:                  return false
+        }
+    }
 
     func confirmationMessage(count: Int) -> String {
-        String(format: NSLocalizedString("bulk.confirm.\(rawValue)Format", comment: ""), count)
+        let key: String
+        switch self {
+        case .markEaten:         key = "bulk.confirm.markEatenFormat"
+        case .markDiscarded:     key = "bulk.confirm.markDiscardedFormat"
+        case .addToShoppingList: key = "bulk.confirm.addToShoppingListFormat"
+        case .delete:            key = "bulk.confirm.deleteFormat"
+        }
+        return String(format: NSLocalizedString(key, comment: ""), count)
+    }
+
+    func completionMessage(count: Int) -> String {
+        let key: String
+        switch self {
+        case .markEaten:         key = "bulk.done.markEatenFormat"
+        case .markDiscarded:     key = "bulk.done.markDiscardedFormat"
+        case .addToShoppingList: key = "bulk.done.addToShoppingListFormat"
+        case .delete:            key = "bulk.done.deleteFormat"
+        }
+        return String(format: NSLocalizedString(key, comment: ""), count)
     }
 }
 
