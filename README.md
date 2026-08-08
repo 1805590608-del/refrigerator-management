@@ -12,6 +12,7 @@ A full-featured iOS app for tracking household food inventory, expiration dates,
 | **Food List** | List/grid toggle, search, filter by status/category/location, sort by date/name |
 | **Add / Edit Food** | Camera or photo library, name, category, location, quantity, unit, purchase/expiry dates, notes |
 | **Quick Add** | Add an active item again from inventory details or history with every field prefilled and editable |
+| **Shopping List** | Save active or archived foods to buy again; mark entries purchased, move them back to “To Buy,” or remove them |
 | **Food Detail** | Full info view, quantity ±1 adjuster, mark eaten/discarded, delete with confirmation |
 | **Expiration Reminders** | Local push notifications 1/3/7 days before expiry, configurable in Settings |
 | **iCloud Sync** | SwiftData + CloudKit private database; offline-first, auto-sync on reconnect |
@@ -34,9 +35,11 @@ FridgePal/
     ├── Models/
     │   ├── FoodItem.swift          # @Model — main food entity + enums
     │   ├── HistoryRecord.swift     # @Model — archived food records
+    │   ├── ShoppingItem.swift      # @Model — independent repurchase snapshots
     │   └── PersistenceController.swift  # ModelContainer + CloudKit setup
     ├── Repositories/
-    │   └── FoodRepository.swift    # CRUD + archive operations
+    │   ├── FoodRepository.swift    # Inventory CRUD + archive operations
+    │   └── ShoppingRepository.swift # Shopping-list persistence
     ├── Services/
     │   ├── NotificationService.swift   # Local push notification scheduling
     │   ├── CloudKitService.swift       # iCloud account status + sync state
@@ -52,6 +55,7 @@ FridgePal/
     │   ├── FoodListView.swift      # List + grid + swipe actions
     │   ├── AddEditFoodView.swift   # Form with camera/photo picker
     │   ├── FoodDetailView.swift    # Detail + actions
+    │   ├── ShoppingListView.swift  # To-buy and purchased entries
     │   ├── HistoryView.swift       # Archive + statistics
     │   └── SettingsView.swift
     └── Resources/
@@ -84,6 +88,19 @@ FridgePalTests/
 
 ### HistoryRecord (`@Model`)
 Archived snapshot of a consumed/discarded/expired food item.
+
+### ShoppingItem (`@Model`)
+Independent repurchase snapshot containing the food name, category, preferred quantity, and unit. Completion timestamps and `updatedAt` support reversible purchased state and normal SwiftData/CloudKit persistence without retaining a relationship to an active or archived item.
+
+### Shopping / Buy-Again Workflow
+
+1. From an active food's detail screen, tap **Add to Shopping List**.
+2. From History, tap **Add to Shopping List** on any consumed or discarded record.
+3. Open the **Shop** tab to review entries under **To Buy** and **Purchased**.
+4. Tap the circle beside an entry to mark it purchased; tap its checkmark to move it back to **To Buy**.
+5. Swipe an entry to delete it.
+
+Because each entry is a snapshot, it remains available even if the source inventory item or history record is later removed.
 
 ---
 
@@ -127,6 +144,8 @@ Tests cover:
 - `NotificationServiceTests` — schedule/cancel without crash
 - `HistoryRecordTests` — archive creation from FoodItem
 - `FoodFormDraftTests` — repeat-entry prefill, source independence, and new active-item creation
+- `ShoppingItemTests` — inventory/history snapshots and reversible completion
+- `ShoppingRepositoryTests` — persisted add, complete, reopen, and delete workflow
 
 ---
 
