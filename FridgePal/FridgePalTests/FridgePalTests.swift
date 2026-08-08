@@ -1,4 +1,5 @@
 import XCTest
+import SwiftData
 @testable import FridgePal
 
 // MARK: - ExpirationState Tests
@@ -343,5 +344,88 @@ final class FoodFormDraftTests: XCTestCase {
         XCTAssertEqual(repeatedItem.photoData, record.photoData)
         XCTAssertEqual(repeatedItem.notes, record.notes)
         XCTAssertEqual(repeatedItem.statusEnum, .active)
+    }
+}
+
+// MARK: - Shopping Item Tests
+
+final class ShoppingItemTests: XCTestCase {
+
+    func testFoodItemSnapshotCopiesRepurchaseMetadataAndRemainsIndependent() {
+        let source = FoodItem(
+            name: "Greek Yogurt",
+            category: .dairy,
+            quantity: 4,
+            unit: "pack"
+        )
+
+        let shoppingItem = ShoppingItem(from: source)
+        source.name = "Vanilla Yogurt"
+        source.quantity = 2
+
+        XCTAssertEqual(shoppingItem.name, "Greek Yogurt")
+        XCTAssertEqual(shoppingItem.categoryEnum, .dairy)
+        XCTAssertEqual(shoppingItem.preferredQuantity, 4)
+        XCTAssertEqual(shoppingItem.unit, "pack")
+        XCTAssertFalse(shoppingItem.isCompleted)
+        XCTAssertNil(shoppingItem.completedAt)
+    }
+
+    func testHistorySnapshotCopiesRepurchaseMetadata() {
+        let source = FoodItem(
+            name: "Soup",
+            category: .cooked,
+            quantity: 2,
+            unit: "can"
+        )
+        let record = HistoryRecord(from: source, finalStatus: .eaten)
+
+        let shoppingItem = ShoppingItem(from: record)
+
+        XCTAssertEqual(shoppingItem.name, record.foodName)
+        XCTAssertEqual(shoppingItem.categoryEnum, .cooked)
+        XCTAssertEqual(shoppingItem.preferredQuantity, record.quantity)
+        XCTAssertEqual(shoppingItem.unit, record.unit)
+    }
+
+    func testCompletionCanBeReversed() {
+        let item = ShoppingItem(name: "Milk")
+        let completionDate = Date(timeIntervalSince1970: 1_800_000_000)
+
+        item.setCompleted(true, at: completionDate)
+
+        XCTAssertTrue(item.isCompleted)
+        XCTAssertEqual(item.completedAt, completionDate)
+        XCTAssertEqual(item.updatedAt, completionDate)
+
+        item.setCompleted(false, at: completionDate.addingTimeInterval(60))
+
+        XCTAssertFalse(item.isCompleted)
+        XCTAssertNil(item.completedAt)
+    }
+}
+
+@MainActor
+final class ShoppingRepositoryTests: XCTestCase {
+
+    func testAddCompleteReopenAndDeleteWorkflowPersists() throws {
+        let schema = Schema([ShoppingItem.self])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let repository = ShoppingRepository(context: container.mainContext)
+        let source = FoodItem(name: "Apples", category: .fruit, quantity: 3, unit: "bag")
+
+        let shoppingItem = try repository.add(from: source)
+
+        XCTAssertEqual(try repository.fetchAll().map(\.name), ["Apples"])
+
+        try repository.setCompleted(shoppingItem, isCompleted: true)
+        XCTAssertTrue(try XCTUnwrap(repository.fetchAll().first).isCompleted)
+
+        try repository.setCompleted(shoppingItem, isCompleted: false)
+        XCTAssertFalse(try XCTUnwrap(repository.fetchAll().first).isCompleted)
+
+        try repository.delete(shoppingItem)
+        XCTAssertTrue(try repository.fetchAll().isEmpty)
     }
 }

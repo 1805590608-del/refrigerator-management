@@ -12,7 +12,7 @@ final class PersistenceController {
     let container: ModelContainer
 
     private init(inMemory: Bool = false) {
-        let schema = Schema([FoodItem.self, HistoryRecord.self])
+        let schema = Schema([FoodItem.self, HistoryRecord.self, ShoppingItem.self])
 
         let configuration: ModelConfiguration
         if inMemory {
