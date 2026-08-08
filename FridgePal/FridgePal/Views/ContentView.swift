@@ -13,6 +13,11 @@ struct ContentView: View {
                     Label("tab.list", systemImage: "list.bullet")
                 }
 
+            ShoppingListView()
+                .tabItem {
+                    Label("tab.shopping", systemImage: "cart.fill")
+                }
+
             HistoryView()
                 .tabItem {
                     Label("tab.history", systemImage: "clock.arrow.circlepath")

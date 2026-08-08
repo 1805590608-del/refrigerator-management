@@ -5,8 +5,8 @@ struct HistoryView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var records: [HistoryRecord] = []
     @State private var selectedRange: HistoryViewModel.TimeRange = .month
-    @State private var showClearAlert = false
     @State private var recordToRepeat: HistoryRecord?
+    @State private var activeAlert: HistoryAlert?
 
     private var repo: FoodRepository { FoodRepository(context: modelContext) }
 
@@ -38,9 +38,11 @@ struct HistoryView: View {
                 } else {
                     List {
                         ForEach(filtered) { record in
-                            HistoryRowView(record: record) {
-                                recordToRepeat = record
-                            }
+                            HistoryRowView(
+                                record: record,
+                                repeatAction: { recordToRepeat = record },
+                                shoppingAction: { addToShoppingList(record) }
+                            )
                                 .swipeActions(edge: .trailing) {
                                     Button(role: .destructive) {
                                         deleteRecord(record)
@@ -60,16 +62,38 @@ struct HistoryView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("button.clearAll", role: .destructive) {
-                        showClearAlert = true
+                        activeAlert = .clearConfirmation
                     }
                     .disabled(records.isEmpty)
                 }
             }
-            .alert("alert.clearHistoryTitle", isPresented: $showClearAlert) {
-                Button("button.clearAll", role: .destructive) { clearAll() }
-                Button("button.cancel", role: .cancel) {}
-            } message: {
-                Text("alert.clearHistoryMessage")
+            .alert(item: $activeAlert) { alert in
+                switch alert {
+                case .clearConfirmation:
+                    Alert(
+                        title: Text("alert.clearHistoryTitle"),
+                        message: Text("alert.clearHistoryMessage"),
+                        primaryButton: .destructive(Text("button.clearAll"), action: clearAll),
+                        secondaryButton: .cancel(Text("button.cancel"))
+                    )
+                case .shoppingAdded(let name):
+                    Alert(
+                        title: Text("shopping.addedTitle"),
+                        message: Text(
+                            String(
+                                format: NSLocalizedString("shopping.addedFormat", comment: ""),
+                                name
+                            )
+                        ),
+                        dismissButton: .default(Text("button.ok"))
+                    )
+                case .error(let message):
+                    Alert(
+                        title: Text("alert.errorTitle"),
+                        message: Text(message),
+                        dismissButton: .default(Text("button.ok"))
+                    )
+                }
             }
             .sheet(item: $recordToRepeat) { record in
                 AddEditFoodView(prefill: FoodFormDraft(historyRecord: record))
@@ -115,6 +139,15 @@ struct HistoryView: View {
         records = (try? repo.fetchHistory()) ?? []
     }
 
+    private func addToShoppingList(_ record: HistoryRecord) {
+        do {
+            try ShoppingRepository(context: modelContext).add(from: record)
+            activeAlert = .shoppingAdded(record.foodName)
+        } catch {
+            activeAlert = .error(error.localizedDescription)
+        }
+    }
+
     private func deleteRecord(_ record: HistoryRecord) {
         try? repo.deleteHistory(record)
         loadRecords()
@@ -126,11 +159,29 @@ struct HistoryView: View {
     }
 }
 
+private enum HistoryAlert: Identifiable {
+    case clearConfirmation
+    case shoppingAdded(String)
+    case error(String)
+
+    var id: String {
+        switch self {
+        case .clearConfirmation:
+            "clearConfirmation"
+        case .shoppingAdded(let name):
+            "shoppingAdded:\(name)"
+        case .error(let message):
+            "error:\(message)"
+        }
+    }
+}
+
 // MARK: - HistoryRowView
 
 struct HistoryRowView: View {
     let record: HistoryRecord
     let repeatAction: () -> Void
+    let shoppingAction: () -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: AppSpacing.medium) {
@@ -154,6 +205,20 @@ struct HistoryRowView: View {
                     title: record.finalStatusEnum.localizedName,
                     systemImage: record.finalStatusEnum.symbolName,
                     tint: statusColor
+                )
+
+                Button(action: shoppingAction) {
+                    Label("button.addToShoppingList", systemImage: "cart.badge.plus")
+                        .font(.caption.weight(.semibold))
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(
+                    Text(
+                        String(
+                            format: NSLocalizedString("accessibility.addToShoppingFormat", comment: ""),
+                            record.foodName
+                        )
+                    )
                 )
 
                 Button(action: repeatAction) {
