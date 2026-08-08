@@ -16,7 +16,7 @@ A full-featured iOS app for tracking household food inventory, expiration dates,
 | **Food Detail** | Full info view, quantity ±1 adjuster, mark eaten/discarded, delete with confirmation |
 | **Expiration Reminders** | Local push notifications 1/3/7 days before expiry, configurable in Settings |
 | **iCloud Sync** | SwiftData + CloudKit private database; offline-first, auto-sync on reconnect |
-| **History** | Eaten/discarded/expired archive; statistics by time range; bulk clear |
+| **History** | Eaten/discarded/expired archive; statistics and waste insights by time range (waste ratio, most-wasted category, most-wasted location); bulk clear |
 | **Settings** | Notification toggles, iCloud status check, list/grid preference, appearance |
 | **Localization** | English (en) + Simplified Chinese (zh-Hans) |
 | **Accessibility** | VoiceOver labels, Dynamic Type, Dark Mode |
@@ -143,6 +143,7 @@ Tests cover:
 - `ImageServiceTests` — resize/compress behavior
 - `NotificationServiceTests` — schedule/cancel without crash
 - `HistoryRecordTests` — archive creation from FoodItem
+- `WasteInsightsTests` — waste ratio, most-wasted category, and most-wasted location aggregations
 - `FoodFormDraftTests` — repeat-entry prefill, source independence, and new active-item creation
 - `ShoppingItemTests` — inventory/history snapshots and reversible completion
 - `ShoppingRepositoryTests` — persisted add, complete, reopen, and delete workflow

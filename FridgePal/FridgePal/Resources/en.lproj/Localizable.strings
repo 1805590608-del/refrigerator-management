@@ -171,6 +171,13 @@
 "history.eaten" = "Eaten";
 "history.wasted" = "Wasted";
 
+/* Waste Insights */
+"insights.title" = "Waste Insights";
+"insights.noWaste" = "No waste in this period — great job!";
+"insights.wasteRatioFormat" = "%d%% of items were wasted";
+"insights.topCategoryFormat" = "Most wasted category: %@";
+"insights.topLocationFormat" = "Most waste from: %@";
+
 /* Time Range */
 "timeRange.week" = "7 Days";
 "timeRange.month" = "30 Days";

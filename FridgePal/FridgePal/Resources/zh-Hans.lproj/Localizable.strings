@@ -167,9 +167,17 @@
 "shopping.addedFormat" = "“%@”已加入购物清单。";
 
 /* 历史 */
+/* 历史记录 */
 "history.total" = "总计";
 "history.eaten" = "已吃完";
 "history.wasted" = "已浪费";
+
+/* 浪费洞察 */
+"insights.title" = "浪费洞察";
+"insights.noWaste" = "本时段无浪费 — 太棒了！";
+"insights.wasteRatioFormat" = "%d%% 的食物被浪费";
+"insights.topCategoryFormat" = "浪费最多的分类：%@";
+"insights.topLocationFormat" = "浪费最多的存储位置：%@";
 
 /* 时间范围 */
 "timeRange.week" = "近7天";

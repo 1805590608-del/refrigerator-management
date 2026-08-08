@@ -429,3 +429,70 @@ final class ShoppingRepositoryTests: XCTestCase {
         XCTAssertTrue(try repository.fetchAll().isEmpty)
     }
 }
+
+// MARK: - WasteInsights Tests
+
+final class WasteInsightsTests: XCTestCase {
+
+    // Convenience helper
+    private func record(status: FoodStatus, category: FoodCategory = .other, location: StorageLocation = .fridge) -> HistoryRecord {
+        let item = FoodItem(name: "Item", category: category, storageLocation: location)
+        return HistoryRecord(from: item, finalStatus: status)
+    }
+
+    func testWasteRatioNilWhenNoRecords() {
+        XCTAssertNil(WasteInsights.wasteRatio(in: []))
+    }
+
+    func testWasteRatioZeroWhenNothingWasted() {
+        let records = [record(status: .eaten), record(status: .eaten)]
+        XCTAssertEqual(WasteInsights.wasteRatio(in: records), 0.0)
+    }
+
+    func testWasteRatioFullyWasted() {
+        let records = [record(status: .discarded), record(status: .expired)]
+        XCTAssertEqual(WasteInsights.wasteRatio(in: records), 1.0)
+    }
+
+    func testWasteRatioMixed() {
+        let records = [record(status: .eaten), record(status: .discarded)]
+        XCTAssertEqual(WasteInsights.wasteRatio(in: records), 0.5)
+    }
+
+    func testTopCategoryNilWhenNoWaste() {
+        let records = [record(status: .eaten, category: .dairy)]
+        XCTAssertNil(WasteInsights.topCategory(in: records))
+    }
+
+    func testTopCategoryPicksMostWasted() {
+        let records = [
+            record(status: .discarded, category: .dairy),
+            record(status: .expired,   category: .dairy),
+            record(status: .discarded, category: .meat),
+            record(status: .eaten,     category: .fruit)
+        ]
+        XCTAssertEqual(WasteInsights.topCategory(in: records), .dairy)
+    }
+
+    func testTopLocationNilWhenNoWaste() {
+        let records = [record(status: .eaten, location: .fridge)]
+        XCTAssertNil(WasteInsights.topLocation(in: records))
+    }
+
+    func testTopLocationPicksMostWasted() {
+        let records = [
+            record(status: .discarded, location: .pantry),
+            record(status: .expired,   location: .pantry),
+            record(status: .discarded, location: .fridge)
+        ]
+        XCTAssertEqual(WasteInsights.topLocation(in: records), .pantry)
+    }
+
+    func testTopCategoryNilWhenEmpty() {
+        XCTAssertNil(WasteInsights.topCategory(in: []))
+    }
+
+    func testTopLocationNilWhenEmpty() {
+        XCTAssertNil(WasteInsights.topLocation(in: []))
+    }
+}

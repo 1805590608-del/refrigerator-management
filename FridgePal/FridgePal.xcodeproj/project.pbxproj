@@ -22,6 +22,7 @@
 		410F66379DFE4CEA86EB5149 /* FoodListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A89CDADF9F3F468D8AFD0348 /* FoodListViewModel.swift */; };
 		11A330B525E24F70B8CD67C3 /* AddEditFoodViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CCC98F995BF417AB2C84E61 /* AddEditFoodViewModel.swift */; };
 		8861ADDEDA3F46638FDADEFF /* HistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F588D84625447838D027351 /* HistoryViewModel.swift */; };
+		AA1234567890ABCDEF012345 /* WasteInsights.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1234567890ABCDEF012345 /* WasteInsights.swift */; };
 		E3ED4B362D7F403799B5C2CF /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7B393637FD347168424589B /* HomeView.swift */; };
 		A5D0954D80834C7B9733E2BE /* FoodListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A334E5E2FA8F44D1A35ABE6E /* FoodListView.swift */; };
 		681BDB53E8224BEBA859D280 /* AddEditFoodView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E91F62D8C7994D8E81C654B1 /* AddEditFoodView.swift */; };
@@ -52,6 +53,7 @@
 		A89CDADF9F3F468D8AFD0348 /* FoodListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodListViewModel.swift; sourceTree = "<group>"; };
 		7CCC98F995BF417AB2C84E61 /* AddEditFoodViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEditFoodViewModel.swift; sourceTree = "<group>"; };
 		6F588D84625447838D027351 /* HistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViewModel.swift; sourceTree = "<group>"; };
+		BB1234567890ABCDEF012345 /* WasteInsights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WasteInsights.swift; sourceTree = "<group>"; };
 		B7B393637FD347168424589B /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		A334E5E2FA8F44D1A35ABE6E /* FoodListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodListView.swift; sourceTree = "<group>"; };
 		E91F62D8C7994D8E81C654B1 /* AddEditFoodView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEditFoodView.swift; sourceTree = "<group>"; };
@@ -99,6 +101,7 @@
 				A89CDADF9F3F468D8AFD0348,
 				7CCC98F995BF417AB2C84E61,
 				6F588D84625447838D027351,
+				BB1234567890ABCDEF012345,
 				B7B393637FD347168424589B,
 				A334E5E2FA8F44D1A35ABE6E,
 				E91F62D8C7994D8E81C654B1,
@@ -234,6 +237,7 @@
 				410F66379DFE4CEA86EB5149 /* FoodListViewModel.swift in Sources */,
 				11A330B525E24F70B8CD67C3 /* AddEditFoodViewModel.swift in Sources */,
 				8861ADDEDA3F46638FDADEFF /* HistoryViewModel.swift in Sources */,
+				AA1234567890ABCDEF012345 /* WasteInsights.swift in Sources */,
 				E3ED4B362D7F403799B5C2CF /* HomeView.swift in Sources */,
 				A5D0954D80834C7B9733E2BE /* FoodListView.swift in Sources */,
 				681BDB53E8224BEBA859D280 /* AddEditFoodView.swift in Sources */,
