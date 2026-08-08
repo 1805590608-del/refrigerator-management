@@ -15,6 +15,7 @@ struct ReminderSettings: Equatable {
     static let defaultHour = 9
 
     /// Days before expiration a reminder should fire, ascending and deduplicated.
+    /// `0` means "on the expiration day itself".
     let advanceDays: [Int]
     /// When true, all reminders that fall on the same day are merged into one digest.
     let groupedDigest: Bool
@@ -159,7 +160,9 @@ enum ReminderPlanner {
     // MARK: Private
 
     private static func groupedReminders(from occurrences: [Occurrence], calendar: Calendar) -> [PlannedReminder] {
-        Dictionary(grouping: occurrences, by: { $0.triggerDate }).map { triggerDate, group in
+        let groups = Dictionary(grouping: occurrences) { digestIdentifier(for: $0.triggerDate, calendar: calendar) }
+        return groups.compactMap { identifier, group -> PlannedReminder? in
+            guard let triggerDate = group.first?.triggerDate else { return nil }
             let ordered = group.sorted { lhs, rhs in
                 lhs.daysRemaining == rhs.daysRemaining
                     ? lhs.candidate.name.localizedCaseInsensitiveCompare(rhs.candidate.name) == .orderedAscending
@@ -168,7 +171,7 @@ enum ReminderPlanner {
             let daysRemaining = ordered.first?.daysRemaining ?? 0
             let names = ordered.map(\.candidate.name)
             return PlannedReminder(
-                identifier: digestIdentifier(for: triggerDate, calendar: calendar),
+                identifier: identifier,
                 triggerDate: triggerDate,
                 itemIDs: ordered.map(\.candidate.id),
                 daysRemaining: daysRemaining,
@@ -202,7 +205,7 @@ enum ReminderPlanner {
         return NSLocalizedString(isDigest ? "notification.title.digest" : "notification.title", comment: "")
     }
 
-    static func singleItemBody(name: String, daysRemaining: Int) -> String {
+    private static func singleItemBody(name: String, daysRemaining: Int) -> String {
         switch daysRemaining {
         case 0:
             return String(format: NSLocalizedString("notification.body.today.format", comment: ""), name)
@@ -213,14 +216,14 @@ enum ReminderPlanner {
         }
     }
 
-    static func digestBody(names: [String], daysRemaining: Int) -> String {
+    private static func digestBody(names: [String], daysRemaining: Int) -> String {
         let key = daysRemaining <= 1
             ? "notification.body.digest.urgent.format"
             : "notification.body.digest.format"
         return String(format: NSLocalizedString(key, comment: ""), names.count, namesSummary(names))
     }
 
-    static func namesSummary(_ names: [String]) -> String {
+    private static func namesSummary(_ names: [String]) -> String {
         guard names.count > maxNamesInDigest else {
             return ListFormatter.localizedString(byJoining: names)
         }
