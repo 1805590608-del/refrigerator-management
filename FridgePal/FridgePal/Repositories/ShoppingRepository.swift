@@ -4,6 +4,7 @@ import SwiftData
 protocol ShoppingRepositoryProtocol {
     func fetchAll() throws -> [ShoppingItem]
     @discardableResult func add(from item: FoodItem) throws -> ShoppingItem
+    @discardableResult func add(from items: [FoodItem]) throws -> [ShoppingItem]
     @discardableResult func add(from record: HistoryRecord) throws -> ShoppingItem
     func setCompleted(_ item: ShoppingItem, isCompleted: Bool) throws
     func delete(_ item: ShoppingItem) throws
@@ -29,6 +30,15 @@ final class ShoppingRepository: ShoppingRepositoryProtocol {
         context.insert(shoppingItem)
         try context.save()
         return shoppingItem
+    }
+
+    @discardableResult
+    func add(from items: [FoodItem]) throws -> [ShoppingItem] {
+        guard !items.isEmpty else { return [] }
+        let shoppingItems = items.map { ShoppingItem(from: $0) }
+        for shoppingItem in shoppingItems { context.insert(shoppingItem) }
+        try context.save()
+        return shoppingItems
     }
 
     @discardableResult

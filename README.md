@@ -10,6 +10,7 @@ A full-featured iOS app for tracking household food inventory, expiration dates,
 |---|---|
 | **Home Dashboard** | Prioritized “Expired Now” and “Use Soon” actions with direct item drill-down, plus summary counts, recent items, and location breakdown |
 | **Food List** | List/grid toggle, search, filter by status/category/location, sort by date/name |
+| **Bulk Actions** | Multi-select foods in the list to mark them all gone/discarded, add them to the shopping list, or delete them, with confirmation before destructive batches |
 | **Add / Edit Food** | Camera or photo library, name, category, location, quantity, unit, purchase/expiry dates, notes |
 | **Quick Add** | Add an active item again from inventory details or history with every field prefilled and editable |
 | **Shopping List** | Save active or archived foods to buy again; mark entries purchased, move them back to “To Buy,” or remove them |
@@ -38,7 +39,7 @@ FridgePal/
     │   ├── ShoppingItem.swift      # @Model — independent repurchase snapshots
     │   └── PersistenceController.swift  # ModelContainer + CloudKit setup
     ├── Repositories/
-    │   ├── FoodRepository.swift    # Inventory CRUD + archive operations
+    │   ├── FoodRepository.swift    # Inventory CRUD + single/batch archive & delete
     │   └── ShoppingRepository.swift # Shopping-list persistence
     ├── Services/
     │   ├── NotificationService.swift   # Local notification scheduling
@@ -53,7 +54,7 @@ FridgePal/
     ├── Views/
     │   ├── ContentView.swift       # TabView root
     │   ├── HomeView.swift          # Dashboard
-    │   ├── FoodListView.swift      # List + grid + swipe actions
+    │   ├── FoodListView.swift      # List + grid + swipe actions + multi-select bulk actions
     │   ├── AddEditFoodView.swift   # Form with camera/photo picker
     │   ├── FoodDetailView.swift    # Detail + actions
     │   ├── ShoppingListView.swift  # To-buy and purchased entries
@@ -102,6 +103,18 @@ Independent repurchase snapshot containing the food name, category, preferred qu
 5. Swipe an entry to delete it.
 
 Because each entry is a snapshot, it remains available even if the source inventory item or history record is later removed.
+
+### Bulk Actions Workflow
+
+1. In the **My Fridge** tab, tap the checklist button in the navigation bar to enter selection mode.
+2. Tap rows to select them, or use **Select All** / **Deselect All** in the bottom bar. The bottom bar shows how many foods are selected.
+3. Open **Bulk Actions** and choose one of:
+   - **Mark as All Gone** / **Mark as Discarded** — archives every selected food to History.
+   - **Add to Shopping List** — creates a buy-again snapshot for each selected food and keeps the foods in the fridge.
+   - **Delete** — permanently removes the selected foods.
+4. Destructive batches ask for confirmation first; **Cancel** or **Done** leaves selection mode.
+
+Selection applies only to the foods currently visible under the active search and filters, so filtering first is the fastest way to clean out, for example, every expired item.
 
 ---
 

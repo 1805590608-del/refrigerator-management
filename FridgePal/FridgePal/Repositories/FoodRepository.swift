@@ -10,6 +10,8 @@ protocol FoodRepositoryProtocol {
     func save(_ item: FoodItem) throws
     func delete(_ item: FoodItem) throws
     func archiveItem(_ item: FoodItem, status: FoodStatus) throws
+    func archiveItems(_ items: [FoodItem], status: FoodStatus) throws
+    func deleteItems(_ items: [FoodItem]) throws
     func deleteHistory(_ record: HistoryRecord) throws
     func clearAllHistory() throws
 }
@@ -57,6 +59,22 @@ final class FoodRepository: FoodRepositoryProtocol {
         let record = HistoryRecord(from: item, finalStatus: status)
         context.insert(record)
         context.delete(item)
+        try context.save()
+    }
+
+    func archiveItems(_ items: [FoodItem], status: FoodStatus) throws {
+        guard !items.isEmpty else { return }
+        for item in items {
+            let record = HistoryRecord(from: item, finalStatus: status)
+            context.insert(record)
+            context.delete(item)
+        }
+        try context.save()
+    }
+
+    func deleteItems(_ items: [FoodItem]) throws {
+        guard !items.isEmpty else { return }
+        for item in items { context.delete(item) }
         try context.save()
     }
 

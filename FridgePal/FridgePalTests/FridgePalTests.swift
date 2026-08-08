@@ -583,6 +583,144 @@ final class ShoppingRepositoryTests: XCTestCase {
     }
 }
 
+// MARK: - Bulk Action Tests
+
+final class BulkSelectionTests: XCTestCase {
+
+    private func makeItems(_ names: [String]) -> [FoodItem] {
+        names.map { FoodItem(name: $0) }
+    }
+
+    func testToggleAddsAndRemovesSelection() {
+        let items = makeItems(["Milk", "Bread"])
+        var selection = BulkSelection()
+
+        selection.toggle(items[0].id)
+        XCTAssertTrue(selection.contains(items[0].id))
+        XCTAssertEqual(selection.count, 1)
+
+        selection.toggle(items[0].id)
+        XCTAssertFalse(selection.contains(items[0].id))
+        XCTAssertTrue(selection.isEmpty)
+    }
+
+    func testSelectAllAndClear() {
+        let items = makeItems(["Milk", "Bread", "Eggs"])
+        var selection = BulkSelection()
+
+        selection.selectAll(items)
+        XCTAssertEqual(selection.count, 3)
+        XCTAssertTrue(selection.containsAll(of: items))
+
+        selection.clear()
+        XCTAssertTrue(selection.isEmpty)
+        XCTAssertFalse(selection.containsAll(of: items))
+    }
+
+    func testContainsAllIsFalseForEmptyList() {
+        var selection = BulkSelection()
+        selection.selectAll(makeItems(["Milk"]))
+        XCTAssertFalse(selection.containsAll(of: []))
+    }
+
+    func testResolveKeepsDisplayOrderAndSkipsMissingItems() {
+        let items = makeItems(["Milk", "Bread", "Eggs"])
+        var selection = BulkSelection()
+        selection.toggle(items[2].id)
+        selection.toggle(items[0].id)
+
+        XCTAssertEqual(selection.resolve(from: items).map(\.name), ["Milk", "Eggs"])
+    }
+
+    func testRetainDropsSelectionsThatAreNoLongerVisible() {
+        let items = makeItems(["Milk", "Bread"])
+        var selection = BulkSelection()
+        selection.selectAll(items)
+
+        selection.retain(in: [items[1]])
+
+        XCTAssertEqual(selection.count, 1)
+        XCTAssertTrue(selection.contains(items[1].id))
+        XCTAssertFalse(selection.contains(items[0].id))
+    }
+
+    func testDestructiveActionsRequireConfirmation() {
+        XCTAssertTrue(BulkAction.delete.requiresConfirmation)
+        XCTAssertTrue(BulkAction.markEaten.requiresConfirmation)
+        XCTAssertTrue(BulkAction.markDiscarded.requiresConfirmation)
+        XCTAssertFalse(BulkAction.addToShoppingList.requiresConfirmation)
+        XCTAssertFalse(BulkAction.addToShoppingList.isDestructive)
+    }
+}
+
+@MainActor
+final class BulkRepositoryTests: XCTestCase {
+
+    private func makeRepositories() throws -> (FoodRepository, ShoppingRepository) {
+        let schema = Schema([FoodItem.self, HistoryRecord.self, ShoppingItem.self])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        return (
+            FoodRepository(context: container.mainContext),
+            ShoppingRepository(context: container.mainContext)
+        )
+    }
+
+    func testArchiveItemsMovesEverySelectedFoodToHistory() throws {
+        let (foodRepository, _) = try makeRepositories()
+        let milk = FoodItem(name: "Milk")
+        let bread = FoodItem(name: "Bread")
+        let eggs = FoodItem(name: "Eggs")
+        for item in [milk, bread, eggs] { try foodRepository.save(item) }
+
+        try foodRepository.archiveItems([milk, bread], status: .discarded)
+
+        XCTAssertEqual(try foodRepository.fetchActive().map(\.name), ["Eggs"])
+        let history = try foodRepository.fetchHistory()
+        XCTAssertEqual(Set(history.map(\.foodName)), ["Milk", "Bread"])
+        XCTAssertTrue(history.allSatisfy { $0.finalStatusEnum == .discarded })
+    }
+
+    func testDeleteItemsRemovesSelectedFoodsWithoutHistory() throws {
+        let (foodRepository, _) = try makeRepositories()
+        let milk = FoodItem(name: "Milk")
+        let bread = FoodItem(name: "Bread")
+        for item in [milk, bread] { try foodRepository.save(item) }
+
+        try foodRepository.deleteItems([milk])
+
+        XCTAssertEqual(try foodRepository.fetchActive().map(\.name), ["Bread"])
+        XCTAssertTrue(try foodRepository.fetchHistory().isEmpty)
+    }
+
+    func testEmptyBatchesAreNoOps() throws {
+        let (foodRepository, shoppingRepository) = try makeRepositories()
+        let milk = FoodItem(name: "Milk")
+        try foodRepository.save(milk)
+
+        try foodRepository.archiveItems([], status: .eaten)
+        try foodRepository.deleteItems([])
+        XCTAssertTrue(try shoppingRepository.add(from: [FoodItem]()).isEmpty)
+
+        XCTAssertEqual(try foodRepository.fetchActive().count, 1)
+        XCTAssertTrue(try shoppingRepository.fetchAll().isEmpty)
+    }
+
+    func testBulkAddToShoppingListSnapshotsEverySelectedFood() throws {
+        let (foodRepository, shoppingRepository) = try makeRepositories()
+        let milk = FoodItem(name: "Milk", category: .dairy, quantity: 2, unit: "bottle")
+        let apples = FoodItem(name: "Apples", category: .fruit, quantity: 3, unit: "bag")
+        for item in [milk, apples] { try foodRepository.save(item) }
+
+        let added = try shoppingRepository.add(from: [milk, apples])
+
+        XCTAssertEqual(added.map(\.name), ["Milk", "Apples"])
+        XCTAssertEqual(Set(try shoppingRepository.fetchAll().map(\.name)), ["Milk", "Apples"])
+        // Foods stay in the fridge when they are only queued for repurchase.
+        XCTAssertEqual(try foodRepository.fetchActive().count, 2)
+    }
+}
+
 // MARK: - WasteInsights Tests
 
 final class WasteInsightsTests: XCTestCase {

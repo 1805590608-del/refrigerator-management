@@ -13,8 +13,13 @@ struct FoodListView: View {
     @State private var showAddFood = false
     @State private var itemToDelete: FoodItem? = nil
     @State private var showDeleteAlert = false
+    @State private var isSelecting = false
+    @State private var selection = BulkSelection()
+    @State private var pendingBulkAction: BulkAction? = nil
+    @State private var bulkResultMessage: String? = nil
 
     private var repository: FoodRepository { FoodRepository(context: modelContext) }
+    private var shoppingRepository: ShoppingRepository { ShoppingRepository(context: modelContext) }
 
     private var displayedItems: [FoodItem] {
         var result = items
@@ -51,7 +56,7 @@ struct FoodListView: View {
                 if items.isEmpty {
                     EmptyStateView(message: "empty.noItems", icon: "refrigerator")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if preferGridView {
+                } else if preferGridView && !isSelecting {
                     gridView
                 } else {
                     listView
@@ -63,24 +68,54 @@ struct FoodListView: View {
             .searchable(text: $searchText, prompt: "search.prompt")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    filterMenu
+                    if isSelecting {
+                        Button("button.cancel") { exitSelectionMode() }
+                    } else {
+                        filterMenu
+                    }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack {
-                        Button {
-                            preferGridView.toggle()
-                        } label: {
-                            Image(systemName: preferGridView ? "list.bullet" : "square.grid.2x2")
-                        }
-                        .accessibilityLabel(preferGridView ? "button.listView" : "button.gridView")
+                    if isSelecting {
+                        Button("button.done") { exitSelectionMode() }
+                            .fontWeight(.semibold)
+                    } else {
+                        HStack {
+                            Button {
+                                preferGridView.toggle()
+                            } label: {
+                                Image(systemName: preferGridView ? "list.bullet" : "square.grid.2x2")
+                            }
+                            .accessibilityLabel(preferGridView ? "button.listView" : "button.gridView")
 
-                        Button {
-                            showAddFood = true
-                        } label: {
-                            Image(systemName: "plus")
-                                .fontWeight(.semibold)
+                            Button {
+                                isSelecting = true
+                                selection.clear()
+                            } label: {
+                                Image(systemName: "checklist")
+                            }
+                            .accessibilityLabel("button.select")
+                            .disabled(displayedItems.isEmpty)
+
+                            Button {
+                                showAddFood = true
+                            } label: {
+                                Image(systemName: "plus")
+                                    .fontWeight(.semibold)
+                            }
+                            .accessibilityLabel("button.addFood")
                         }
-                        .accessibilityLabel("button.addFood")
+                    }
+                }
+                if isSelecting {
+                    ToolbarItemGroup(placement: .bottomBar) {
+                        selectAllButton
+                        Spacer()
+                        Text(selectionCountLabel)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .accessibilityLabel(selectionCountLabel)
+                        Spacer()
+                        bulkActionMenu
                     }
                 }
             }
@@ -98,6 +133,34 @@ struct FoodListView: View {
             } message: {
                 Text("alert.deleteMessage")
             }
+            .confirmationDialog(
+                "bulk.confirmTitle",
+                isPresented: Binding(
+                    get: { pendingBulkAction != nil },
+                    set: { if !$0 { pendingBulkAction = nil } }
+                ),
+                titleVisibility: .visible,
+                presenting: pendingBulkAction
+            ) { action in
+                Button(action.localizedName, role: .destructive) {
+                    perform(action)
+                    pendingBulkAction = nil
+                }
+                Button("button.cancel", role: .cancel) { pendingBulkAction = nil }
+            } message: { action in
+                Text(action.confirmationMessage(count: selection.count))
+            }
+            .alert(
+                "bulk.doneTitle",
+                isPresented: Binding(
+                    get: { bulkResultMessage != nil },
+                    set: { if !$0 { bulkResultMessage = nil } }
+                )
+            ) {
+                Button("button.ok") { bulkResultMessage = nil }
+            } message: {
+                Text(bulkResultMessage ?? "")
+            }
             .onAppear { loadItems() }
         }
     }
@@ -108,30 +171,93 @@ struct FoodListView: View {
         List {
             Section {
                 ForEach(displayedItems) { item in
-                    NavigationLink(destination: FoodDetailView(item: item).onDisappear { loadItems() }) {
-                        FoodRowView(item: item)
-                            .padding(.vertical, AppSpacing.xSmall)
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            itemToDelete = item
-                            showDeleteAlert = true
-                        } label: {
-                            Label("button.delete", systemImage: "trash")
+                    if isSelecting {
+                        selectableRow(for: item)
+                    } else {
+                        NavigationLink(destination: FoodDetailView(item: item).onDisappear { loadItems() }) {
+                            FoodRowView(item: item)
+                                .padding(.vertical, AppSpacing.xSmall)
                         }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                itemToDelete = item
+                                showDeleteAlert = true
+                            } label: {
+                                Label("button.delete", systemImage: "trash")
+                            }
 
-                        Button {
-                            markEaten(item)
-                        } label: {
-                            Label("status.eaten", systemImage: "checkmark.circle")
+                            Button {
+                                markEaten(item)
+                            } label: {
+                                Label("status.eaten", systemImage: "checkmark.circle")
+                            }
+                            .tint(Color(uiColor: .systemGreen))
                         }
-                        .tint(Color(uiColor: .systemGreen))
                     }
                 }
             }
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
+    }
+
+    private func selectableRow(for item: FoodItem) -> some View {
+        let isSelected = selection.contains(item.id)
+        return Button {
+            selection.toggle(item.id)
+        } label: {
+            HStack(spacing: AppSpacing.medium) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundStyle(isSelected ? Color.accentColor : .secondary)
+                    .accessibilityHidden(true)
+
+                FoodRowView(item: item)
+                    .padding(.vertical, AppSpacing.xSmall)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : [.isButton])
+        .accessibilityHint("accessibility.toggleSelection")
+    }
+
+    // MARK: Bulk Action Controls
+
+    private var selectAllButton: some View {
+        let allSelected = selection.containsAll(of: displayedItems)
+        return Button(allSelected ? "bulk.deselectAll" : "bulk.selectAll") {
+            if allSelected {
+                selection.clear()
+            } else {
+                selection.selectAll(displayedItems)
+            }
+        }
+        .disabled(displayedItems.isEmpty)
+    }
+
+    private var bulkActionMenu: some View {
+        Menu {
+            ForEach(BulkAction.allCases) { action in
+                Button(role: action.isDestructive ? ButtonRole.destructive : nil) {
+                    if action.requiresConfirmation {
+                        pendingBulkAction = action
+                    } else {
+                        perform(action)
+                    }
+                } label: {
+                    Label(action.localizedName, systemImage: action.systemImage)
+                }
+            }
+        } label: {
+            Label("bulk.actions", systemImage: "ellipsis.circle")
+        }
+        .disabled(selection.isEmpty)
+        .accessibilityLabel("bulk.actions")
+    }
+
+    private var selectionCountLabel: String {
+        String(format: NSLocalizedString("bulk.selectedCountFormat", comment: ""), selection.count)
     }
 
     // MARK: Grid View
@@ -237,6 +363,38 @@ struct FoodListView: View {
     private func markEaten(_ item: FoodItem) {
         try? repository.archiveItem(item, status: .eaten)
         loadItems()
+        NotificationService.shared.refreshSchedule(using: repository)
+    }
+
+    private func exitSelectionMode() {
+        isSelecting = false
+        selection.clear()
+        pendingBulkAction = nil
+    }
+
+    private func perform(_ action: BulkAction) {
+        let targets = selection.resolve(from: displayedItems)
+        guard !targets.isEmpty else { return }
+
+        do {
+            switch action {
+            case .markEaten:
+                try repository.archiveItems(targets, status: .eaten)
+            case .markDiscarded:
+                try repository.archiveItems(targets, status: .discarded)
+            case .addToShoppingList:
+                try shoppingRepository.add(from: targets)
+            case .delete:
+                try repository.deleteItems(targets)
+            }
+            bulkResultMessage = action.completionMessage(count: targets.count)
+        } catch {
+            bulkResultMessage = error.localizedDescription
+        }
+
+        loadItems()
+        selection.retain(in: displayedItems)
+        if selection.isEmpty { isSelecting = false }
         NotificationService.shared.refreshSchedule(using: repository)
     }
 }
