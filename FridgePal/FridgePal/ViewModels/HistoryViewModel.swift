@@ -48,6 +48,23 @@ final class HistoryViewModel: ObservableObject {
     var discardedCount: Int { filteredRecords.filter { $0.finalStatusEnum == .discarded || $0.finalStatusEnum == .expired }.count }
     var eatenCount: Int     { filteredRecords.filter { $0.finalStatusEnum == .eaten }.count }
 
+    // MARK: - Waste Insights
+
+    /// Fraction of archived items that were wasted (0–1), or nil when there are no records.
+    var wasteRatio: Double? {
+        WasteInsights.wasteRatio(in: filteredRecords)
+    }
+
+    /// The food category wasted most often in the selected time range, or nil when nothing was wasted.
+    var mostWastedCategory: FoodCategory? {
+        WasteInsights.topCategory(in: filteredRecords)
+    }
+
+    /// The storage location whose items are wasted most often, or nil when nothing was wasted.
+    var mostWastedLocation: StorageLocation? {
+        WasteInsights.topLocation(in: filteredRecords)
+    }
+
     func delete(_ record: HistoryRecord) {
         try? repository.deleteHistory(record)
         load()

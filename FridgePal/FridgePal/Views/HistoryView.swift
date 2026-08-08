@@ -23,6 +23,10 @@ struct HistoryView: View {
                     .padding(.horizontal, AppSpacing.large)
                     .padding(.top, AppSpacing.large)
 
+                insightsCard
+                    .padding(.horizontal, AppSpacing.large)
+                    .padding(.top, AppSpacing.medium)
+
                 Picker("", selection: $selectedRange) {
                     ForEach(HistoryViewModel.TimeRange.allCases) { range in
                         Text(range.localizedName).tag(range)
@@ -100,6 +104,53 @@ struct HistoryView: View {
             }
             .onAppear { loadRecords() }
         }
+    }
+
+    private var insightsCard: some View {
+        let ratio = WasteInsights.wasteRatio(in: filtered)
+        let topCategory = WasteInsights.topCategory(in: filtered)
+        let topLocation = WasteInsights.topLocation(in: filtered)
+        let hasWaste = ratio.map { $0 > 0 } ?? false
+
+        return VStack(alignment: .leading, spacing: AppSpacing.small) {
+            Text("insights.title")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            if !hasWaste {
+                Label(LocalizedStringKey("insights.noWaste"), systemImage: "checkmark.seal.fill")
+                    .font(.footnote)
+                    .foregroundStyle(Color(uiColor: .systemGreen))
+            } else {
+                if let ratio {
+                    let pct = Int((ratio * 100).rounded())
+                    Label(
+                        String(format: NSLocalizedString("insights.wasteRatioFormat", comment: ""), pct),
+                        systemImage: "chart.pie"
+                    )
+                    .font(.footnote)
+                }
+
+                if let cat = topCategory {
+                    Label(
+                        String(format: NSLocalizedString("insights.topCategoryFormat", comment: ""), cat.localizedName),
+                        systemImage: "tag"
+                    )
+                    .font(.footnote)
+                }
+
+                if let loc = topLocation {
+                    Label(
+                        String(format: NSLocalizedString("insights.topLocationFormat", comment: ""), loc.localizedName),
+                        systemImage: "location"
+                    )
+                    .font(.footnote)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .appCardStyle()
+        .accessibilityElement(children: .combine)
     }
 
     private var statsBar: some View {
