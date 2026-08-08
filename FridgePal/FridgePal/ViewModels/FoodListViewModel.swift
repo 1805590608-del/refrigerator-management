@@ -97,21 +97,21 @@ final class FoodListViewModel: ObservableObject {
         return result
     }
 
-    func delete(_ item: FoodItem, advanceDays: [Int]) {
-        notificationService.cancelReminders(for: item, advanceDays: advanceDays)
+    func delete(_ item: FoodItem, settings: ReminderSettings = .current()) {
         try? repository.delete(item)
         load()
+        notificationService.refreshSchedule(for: items, settings: settings)
     }
 
-    func markEaten(_ item: FoodItem, advanceDays: [Int]) {
-        notificationService.cancelReminders(for: item, advanceDays: advanceDays)
+    func markEaten(_ item: FoodItem, settings: ReminderSettings = .current()) {
         try? repository.archiveItem(item, status: .eaten)
         load()
+        notificationService.refreshSchedule(for: items, settings: settings)
     }
 
-    func markDiscarded(_ item: FoodItem, advanceDays: [Int]) {
-        notificationService.cancelReminders(for: item, advanceDays: advanceDays)
+    func markDiscarded(_ item: FoodItem, settings: ReminderSettings = .current()) {
         try? repository.archiveItem(item, status: .discarded)
         load()
+        notificationService.refreshSchedule(for: items, settings: settings)
     }
 }

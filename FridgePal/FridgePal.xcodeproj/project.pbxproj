@@ -16,6 +16,7 @@
 		33954CADE4E341C4A3FB8616 /* FoodRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96788B44A2492F94107422 /* FoodRepository.swift */; };
 		2A3B4C5D6E7F8091A2B3C4D5 /* ShoppingRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4B5C6D7E8F9012A3B4C5D6 /* ShoppingRepository.swift */; };
 		A2AF2E5A44ED400B964840D1 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279D2078C2E64345AF547CD4 /* NotificationService.swift */; };
+		CC1234567890ABCDEF012346 /* ReminderPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD1234567890ABCDEF012346 /* ReminderPlanner.swift */; };
 		B0885AF2539640DE81CCC1B2 /* CloudKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86866E568945438D9366AF8F /* CloudKitService.swift */; };
 		8E1FA1DEF85C460C9AB5CC3D /* ImageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CE8EB6E552544D3ABBF1EFB /* ImageService.swift */; };
 		D19D17CD25FC4A9F86547EFD /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC9AC6F87F7427F824CB731 /* HomeViewModel.swift */; };
@@ -47,6 +48,7 @@
 		1A96788B44A2492F94107422 /* FoodRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodRepository.swift; sourceTree = "<group>"; };
 		3A4B5C6D7E8F9012A3B4C5D6 /* ShoppingRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repositories/ShoppingRepository.swift; sourceTree = "<group>"; };
 		279D2078C2E64345AF547CD4 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		DD1234567890ABCDEF012346 /* ReminderPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ReminderPlanner.swift; sourceTree = "<group>"; };
 		86866E568945438D9366AF8F /* CloudKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitService.swift; sourceTree = "<group>"; };
 		0CE8EB6E552544D3ABBF1EFB /* ImageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageService.swift; sourceTree = "<group>"; };
 		3FC9AC6F87F7427F824CB731 /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
@@ -95,6 +97,7 @@
 				1A96788B44A2492F94107422,
 				3A4B5C6D7E8F9012A3B4C5D6 /* ShoppingRepository.swift */,
 				279D2078C2E64345AF547CD4,
+				DD1234567890ABCDEF012346 /* ReminderPlanner.swift */,
 				86866E568945438D9366AF8F,
 				0CE8EB6E552544D3ABBF1EFB,
 				3FC9AC6F87F7427F824CB731,
@@ -231,6 +234,7 @@
 				33954CADE4E341C4A3FB8616 /* FoodRepository.swift in Sources */,
 				2A3B4C5D6E7F8091A2B3C4D5 /* ShoppingRepository.swift in Sources */,
 				A2AF2E5A44ED400B964840D1 /* NotificationService.swift in Sources */,
+				CC1234567890ABCDEF012346 /* ReminderPlanner.swift in Sources */,
 				B0885AF2539640DE81CCC1B2 /* CloudKitService.swift in Sources */,
 				8E1FA1DEF85C460C9AB5CC3D /* ImageService.swift in Sources */,
 				D19D17CD25FC4A9F86547EFD /* HomeViewModel.swift in Sources */,

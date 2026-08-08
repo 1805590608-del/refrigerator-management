@@ -4,13 +4,9 @@ import UserNotifications
 
 @main
 struct FridgePalApp: App {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var cloudKitService = CloudKitService.shared
-    @AppStorage("reminderDays") private var reminderDaysRaw: String = "1,3,7"
     @AppStorage("preferGridView") var preferGridView: Bool = false
-
-    var reminderDays: [Int] {
-        reminderDaysRaw.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
-    }
 
     var body: some Scene {
         WindowGroup {
@@ -21,11 +17,23 @@ struct FridgePalApp: App {
                     requestNotificationPermission()
                 }
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            // Reminders are day-based, so rebuild the schedule whenever the app
+            // comes to the foreground to keep digests aligned with today.
+            if newPhase == .active { refreshReminders() }
+        }
     }
 
     private func requestNotificationPermission() {
         Task {
-            _ = await NotificationService.shared.requestAuthorization()
+            let granted = await NotificationService.shared.requestAuthorization()
+            if granted { refreshReminders() }
         }
+    }
+
+    @MainActor
+    private func refreshReminders() {
+        let repository = FoodRepository(context: PersistenceController.shared.container.mainContext)
+        NotificationService.shared.refreshSchedule(using: repository)
     }
 }
