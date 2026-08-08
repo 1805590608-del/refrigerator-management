@@ -10,6 +10,8 @@ struct FoodDetailView: View {
     @State private var showEdit = false
     @State private var showAddAgain = false
     @State private var showDeleteAlert = false
+    @State private var shoppingAlertTitle = LocalizedStringKey("shopping.addedTitle")
+    @State private var shoppingMessage: String?
 
     var body: some View {
         ScrollView {
@@ -170,6 +172,30 @@ struct FoodDetailView: View {
     private var actionButtons: some View {
         VStack(spacing: AppSpacing.medium) {
             Button {
+                addToShoppingList()
+            } label: {
+                Label("button.addToShoppingList", systemImage: "cart.badge.plus")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .accessibilityLabel(
+                Text(
+                    String(
+                        format: NSLocalizedString("accessibility.addToShoppingFormat", comment: ""),
+                        item.name
+                    )
+                )
+            )
+            .alert(shoppingAlertTitle, isPresented: Binding(
+                get: { shoppingMessage != nil },
+                set: { if !$0 { shoppingMessage = nil } }
+            )) {
+                Button("button.ok") { shoppingMessage = nil }
+            } message: {
+                Text(shoppingMessage ?? "")
+            }
+
+            Button {
                 showAddAgain = true
             } label: {
                 Label("button.addAgain", systemImage: "plus.square.on.square")
@@ -220,6 +246,20 @@ struct FoodDetailView: View {
     }
 
     // MARK: - Helpers
+
+    private func addToShoppingList() {
+        do {
+            try ShoppingRepository(context: modelContext).add(from: item)
+            shoppingAlertTitle = LocalizedStringKey("shopping.addedTitle")
+            shoppingMessage = String(
+                format: NSLocalizedString("shopping.addedFormat", comment: ""),
+                item.name
+            )
+        } catch {
+            shoppingAlertTitle = LocalizedStringKey("alert.errorTitle")
+            shoppingMessage = error.localizedDescription
+        }
+    }
 
     private func adjustQuantity(by delta: Double) {
         let newQ = max(1, item.quantity + delta)

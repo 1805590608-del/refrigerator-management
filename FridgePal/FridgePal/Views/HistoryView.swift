@@ -7,6 +7,8 @@ struct HistoryView: View {
     @State private var selectedRange: HistoryViewModel.TimeRange = .month
     @State private var showClearAlert = false
     @State private var recordToRepeat: HistoryRecord?
+    @State private var shoppingAlertTitle = LocalizedStringKey("shopping.addedTitle")
+    @State private var shoppingMessage: String?
 
     private var repo: FoodRepository { FoodRepository(context: modelContext) }
 
@@ -38,9 +40,11 @@ struct HistoryView: View {
                 } else {
                     List {
                         ForEach(filtered) { record in
-                            HistoryRowView(record: record) {
-                                recordToRepeat = record
-                            }
+                            HistoryRowView(
+                                record: record,
+                                repeatAction: { recordToRepeat = record },
+                                shoppingAction: { addToShoppingList(record) }
+                            )
                                 .swipeActions(edge: .trailing) {
                                     Button(role: .destructive) {
                                         deleteRecord(record)
@@ -52,6 +56,14 @@ struct HistoryView: View {
                     }
                     .listStyle(.insetGrouped)
                     .scrollContentBackground(.hidden)
+                    .alert(shoppingAlertTitle, isPresented: Binding(
+                        get: { shoppingMessage != nil },
+                        set: { if !$0 { shoppingMessage = nil } }
+                    )) {
+                        Button("button.ok") { shoppingMessage = nil }
+                    } message: {
+                        Text(shoppingMessage ?? "")
+                    }
                 }
             }
             .background(Color(uiColor: .systemGroupedBackground))
@@ -115,6 +127,20 @@ struct HistoryView: View {
         records = (try? repo.fetchHistory()) ?? []
     }
 
+    private func addToShoppingList(_ record: HistoryRecord) {
+        do {
+            try ShoppingRepository(context: modelContext).add(from: record)
+            shoppingAlertTitle = LocalizedStringKey("shopping.addedTitle")
+            shoppingMessage = String(
+                format: NSLocalizedString("shopping.addedFormat", comment: ""),
+                record.foodName
+            )
+        } catch {
+            shoppingAlertTitle = LocalizedStringKey("alert.errorTitle")
+            shoppingMessage = error.localizedDescription
+        }
+    }
+
     private func deleteRecord(_ record: HistoryRecord) {
         try? repo.deleteHistory(record)
         loadRecords()
@@ -131,6 +157,7 @@ struct HistoryView: View {
 struct HistoryRowView: View {
     let record: HistoryRecord
     let repeatAction: () -> Void
+    let shoppingAction: () -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: AppSpacing.medium) {
@@ -154,6 +181,20 @@ struct HistoryRowView: View {
                     title: record.finalStatusEnum.localizedName,
                     systemImage: record.finalStatusEnum.symbolName,
                     tint: statusColor
+                )
+
+                Button(action: shoppingAction) {
+                    Label("button.addToShoppingList", systemImage: "cart.badge.plus")
+                        .font(.caption.weight(.semibold))
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(
+                    Text(
+                        String(
+                            format: NSLocalizedString("accessibility.addToShoppingFormat", comment: ""),
+                            record.foodName
+                        )
+                    )
                 )
 
                 Button(action: repeatAction) {
