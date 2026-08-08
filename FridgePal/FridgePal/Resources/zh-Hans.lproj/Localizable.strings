@@ -1,6 +1,7 @@
 /* 标签栏 */
 "tab.home" = "首页";
 "tab.list" = "冰箱";
+"tab.shopping" = "购物";
 "tab.history" = "历史";
 "tab.settings" = "设置";
 
@@ -9,6 +10,7 @@
 "nav.list" = "我的冰箱";
 "nav.addFood" = "添加食物";
 "nav.editFood" = "编辑食物";
+"nav.shopping" = "购物清单";
 "nav.history" = "历史记录";
 "nav.settings" = "设置";
 
@@ -109,9 +111,13 @@
 "button.increaseQuantity" = "增加数量";
 "button.decreaseQuantity" = "减少数量";
 "button.addAgain" = "再次添加";
+"button.addToShoppingList" = "加入购物清单";
 
 /* 辅助功能 */
 "accessibility.addAgainFormat" = "再次添加“%@”";
+"accessibility.addToShoppingFormat" = "将“%@”加入购物清单";
+"accessibility.markPurchasedFormat" = "将“%@”标记为已购买";
+"accessibility.markNeededFormat" = "将“%@”重新加入待购清单";
 "accessibility.openFoodDetails" = "打开食物详情";
 
 /* 照片 */
@@ -152,6 +158,13 @@
 /* 空状态 */
 "empty.noItems" = "暂无食物。\n点击 + 添加第一个食物！";
 "empty.noHistory" = "暂无历史记录。";
+"empty.noShoppingItems" = "购物清单为空。\n可从食物详情或历史记录中添加。";
+
+/* 购物清单 */
+"shopping.toBuy" = "待购买";
+"shopping.completed" = "已购买";
+"shopping.addedTitle" = "已加入购物清单";
+"shopping.addedFormat" = "“%@”已加入购物清单。";
 
 /* 历史 */
 "history.total" = "总计";

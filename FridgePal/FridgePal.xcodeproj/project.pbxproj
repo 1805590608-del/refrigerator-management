@@ -27,6 +27,7 @@
 		681BDB53E8224BEBA859D280 /* AddEditFoodView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E91F62D8C7994D8E81C654B1 /* AddEditFoodView.swift */; };
 		51F0E97A3EFE4D0EBBB8A7B9 /* FoodDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CE263CEA76540118BE4C099 /* FoodDetailView.swift */; };
 		9A0561CB770B4CCE877AE8D2 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B73539DFC1C40E49C561736 /* HistoryView.swift */; };
+		4A5B6C7D8E9F0123A4B5C6D7 /* ShoppingListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A6B7C8D9E0F1234A5B6C7D8 /* ShoppingListView.swift */; };
 		D228E955E7E84CEB886E0589 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F846B7DBA22B4C6E97FB3047 /* SettingsView.swift */; };
 		4A5F3426E31E4AB5B1393F40 /* UIStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B7E9414EF544D6A37EFA38 /* UIStyle.swift */; };
 		3C5B6B2123434CD3834CB526 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = A812125355E0464E9D0D40F5 /* Localizable.strings */; };
@@ -56,6 +57,7 @@
 		E91F62D8C7994D8E81C654B1 /* AddEditFoodView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEditFoodView.swift; sourceTree = "<group>"; };
 		3CE263CEA76540118BE4C099 /* FoodDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodDetailView.swift; sourceTree = "<group>"; };
 		6B73539DFC1C40E49C561736 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		5A6B7C8D9E0F1234A5B6C7D8 /* ShoppingListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ShoppingListView.swift; sourceTree = "<group>"; };
 		F846B7DBA22B4C6E97FB3047 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		59B7E9414EF544D6A37EFA38 /* UIStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIStyle.swift; sourceTree = "<group>"; };
 		A812125355E0464E9D0D40F5 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 				E91F62D8C7994D8E81C654B1,
 				3CE263CEA76540118BE4C099,
 				6B73539DFC1C40E49C561736,
+				5A6B7C8D9E0F1234A5B6C7D8 /* ShoppingListView.swift */,
 				F846B7DBA22B4C6E97FB3047,
 				59B7E9414EF544D6A37EFA38,
 				C041A4C013A940EDBD6B50C8,
@@ -236,6 +239,7 @@
 				681BDB53E8224BEBA859D280 /* AddEditFoodView.swift in Sources */,
 				51F0E97A3EFE4D0EBBB8A7B9 /* FoodDetailView.swift in Sources */,
 				9A0561CB770B4CCE877AE8D2 /* HistoryView.swift in Sources */,
+				4A5B6C7D8E9F0123A4B5C6D7 /* ShoppingListView.swift in Sources */,
 				D228E955E7E84CEB886E0589 /* SettingsView.swift in Sources */,
 				4A5F3426E31E4AB5B1393F40 /* UIStyle.swift in Sources */,
 			);

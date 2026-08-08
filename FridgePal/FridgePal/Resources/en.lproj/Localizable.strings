@@ -1,6 +1,7 @@
 /* Tabs */
 "tab.home" = "Home";
 "tab.list" = "My Fridge";
+"tab.shopping" = "Shop";
 "tab.history" = "History";
 "tab.settings" = "Settings";
 
@@ -9,6 +10,7 @@
 "nav.list" = "My Fridge";
 "nav.addFood" = "Add Food";
 "nav.editFood" = "Edit Food";
+"nav.shopping" = "Shopping List";
 "nav.history" = "History";
 "nav.settings" = "Settings";
 
@@ -109,9 +111,13 @@
 "button.increaseQuantity" = "Increase Quantity";
 "button.decreaseQuantity" = "Decrease Quantity";
 "button.addAgain" = "Add Again";
+"button.addToShoppingList" = "Add to Shopping List";
 
 /* Accessibility */
 "accessibility.addAgainFormat" = "Add %@ again";
+"accessibility.addToShoppingFormat" = "Add %@ to shopping list";
+"accessibility.markPurchasedFormat" = "Mark %@ as purchased";
+"accessibility.markNeededFormat" = "Move %@ back to items to buy";
 "accessibility.openFoodDetails" = "Opens food details";
 
 /* Photo */
@@ -152,6 +158,13 @@
 /* Empty States */
 "empty.noItems" = "No food items yet.\nTap + to add your first item!";
 "empty.noHistory" = "No history records.";
+"empty.noShoppingItems" = "Your shopping list is empty.\nAdd items from food details or history.";
+
+/* Shopping */
+"shopping.toBuy" = "To Buy";
+"shopping.completed" = "Purchased";
+"shopping.addedTitle" = "Added to Shopping List";
+"shopping.addedFormat" = "%@ is on your shopping list.";
 
 /* History */
 "history.total" = "Total";
