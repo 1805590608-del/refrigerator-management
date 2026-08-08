@@ -131,6 +131,9 @@ Selection applies only to the foods currently visible under the active search an
 4. Sync uses `updatedAt` field to resolve conflicts (last-write wins).
 5. **Offline support**: SwiftData writes locally first; CloudKit syncs automatically when connectivity returns.
 
+Sharing one fridge between several people is not supported yet — see the
+[Shared Household / Collaboration Roadmap](docs/shared-household-roadmap.md) for the planned design.
+
 ---
 
 ## Building & Running
