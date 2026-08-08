@@ -235,3 +235,27 @@
 /* 错误 */
 "error.cameraPermission" = "需要相机权限。请在「设置」>「隐私」>「相机」中开启。";
 "error.repositoryUnavailable" = "食物存储不可用。";
+
+/* 批量操作 */
+"button.select" = "选择食物";
+"button.done" = "完成";
+"bulk.actions" = "批量操作";
+"bulk.selectAll" = "全选";
+"bulk.deselectAll" = "取消全选";
+"bulk.selectedCountFormat" = "已选择 %d 件";
+"bulk.markEaten" = "标记为已吃完";
+"bulk.markDiscarded" = "标记为已丢弃";
+"bulk.addToShoppingList" = "加入购物清单";
+"bulk.delete" = "删除";
+"bulk.confirmTitle" = "确认批量操作";
+"bulk.confirm.markEatenFormat" = "将 %d 件食物标记为已吃完并移入历史记录？";
+"bulk.confirm.markDiscardedFormat" = "将 %d 件食物标记为已丢弃并移入历史记录？";
+"bulk.confirm.deleteFormat" = "永久删除 %d 件食物？此操作无法撤销。";
+"bulk.doneTitle" = "已完成";
+"bulk.done.markEatenFormat" = "已将 %d 件食物标记为已吃完。";
+"bulk.done.markDiscardedFormat" = "已将 %d 件食物标记为已丢弃。";
+"bulk.done.addToShoppingListFormat" = "已将 %d 件食物加入购物清单。";
+"bulk.done.deleteFormat" = "已删除 %d 件食物。";
+
+/* 无障碍 */
+"accessibility.toggleSelection" = "轻点两下以选择或取消选择此食物";

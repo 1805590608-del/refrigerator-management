@@ -234,3 +234,27 @@
 /* Errors */
 "error.cameraPermission" = "Camera access is required. Please enable it in Settings → Privacy → Camera.";
 "error.repositoryUnavailable" = "Food storage is unavailable.";
+
+/* Bulk Actions */
+"button.select" = "Select Items";
+"button.done" = "Done";
+"bulk.actions" = "Bulk Actions";
+"bulk.selectAll" = "Select All";
+"bulk.deselectAll" = "Deselect All";
+"bulk.selectedCountFormat" = "%d selected";
+"bulk.markEaten" = "Mark as All Gone";
+"bulk.markDiscarded" = "Mark as Discarded";
+"bulk.addToShoppingList" = "Add to Shopping List";
+"bulk.delete" = "Delete";
+"bulk.confirmTitle" = "Confirm Bulk Action";
+"bulk.confirm.markEatenFormat" = "Move %d item(s) to history as all gone?";
+"bulk.confirm.markDiscardedFormat" = "Move %d item(s) to history as discarded?";
+"bulk.confirm.deleteFormat" = "Permanently delete %d item(s)? This cannot be undone.";
+"bulk.doneTitle" = "Done";
+"bulk.done.markEatenFormat" = "%d item(s) marked as all gone.";
+"bulk.done.markDiscardedFormat" = "%d item(s) marked as discarded.";
+"bulk.done.addToShoppingListFormat" = "%d item(s) added to your shopping list.";
+"bulk.done.deleteFormat" = "%d item(s) deleted.";
+
+/* Accessibility */
+"accessibility.toggleSelection" = "Double tap to select or deselect this food";

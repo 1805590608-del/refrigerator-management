@@ -27,6 +27,84 @@ enum FilterOption: String, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - Bulk Actions
+
+/// A batch operation that can be applied to several foods at once.
+enum BulkAction: String, CaseIterable, Identifiable {
+    case markEaten         = "markEaten"
+    case markDiscarded     = "markDiscarded"
+    case addToShoppingList = "addToShoppingList"
+    case delete            = "delete"
+
+    var id: String { rawValue }
+
+    var localizedName: String {
+        NSLocalizedString("bulk.\(rawValue)", comment: "")
+    }
+
+    var systemImage: String {
+        switch self {
+        case .markEaten:         return "checkmark.circle"
+        case .markDiscarded:     return "trash.slash"
+        case .addToShoppingList: return "cart.badge.plus"
+        case .delete:            return "trash"
+        }
+    }
+
+    /// Actions that remove foods from the fridge need an explicit confirmation.
+    var isDestructive: Bool {
+        self != .addToShoppingList
+    }
+
+    var requiresConfirmation: Bool { isDestructive }
+
+    func confirmationMessage(count: Int) -> String {
+        String(format: NSLocalizedString("bulk.confirm.\(rawValue)Format", comment: ""), count)
+    }
+}
+
+/// Tracks which foods are selected while the list is in multi-select mode.
+struct BulkSelection: Equatable {
+    private(set) var ids: Set<UUID> = []
+
+    var isEmpty: Bool { ids.isEmpty }
+    var count: Int { ids.count }
+
+    func contains(_ id: UUID) -> Bool { ids.contains(id) }
+
+    mutating func toggle(_ id: UUID) {
+        if ids.contains(id) {
+            ids.remove(id)
+        } else {
+            ids.insert(id)
+        }
+    }
+
+    mutating func selectAll(_ items: [FoodItem]) {
+        ids = Set(items.map(\.id))
+    }
+
+    mutating func clear() {
+        ids.removeAll()
+    }
+
+    /// Drops selected identifiers that are no longer visible (filtered out, deleted, or archived).
+    mutating func retain(in items: [FoodItem]) {
+        let visible = Set(items.map(\.id))
+        ids.formIntersection(visible)
+    }
+
+    /// Selected foods, in the display order of `items`.
+    func resolve(from items: [FoodItem]) -> [FoodItem] {
+        items.filter { ids.contains($0.id) }
+    }
+
+    /// True when every displayed food is already selected.
+    func containsAll(of items: [FoodItem]) -> Bool {
+        !items.isEmpty && items.allSatisfy { ids.contains($0.id) }
+    }
+}
+
 @MainActor
 final class FoodListViewModel: ObservableObject {
     @Published var items: [FoodItem] = []
