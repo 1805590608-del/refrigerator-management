@@ -12,14 +12,6 @@ struct HomeView: View {
 
     private var totalCount: Int { activeItems.count }
 
-    private var expiringSoonCount: Int {
-        activeItems.filter { $0.expirationState == .expiringSoon }.count
-    }
-
-    private var expiredCount: Int {
-        activeItems.filter { $0.expirationState == .expired }.count
-    }
-
     private var recentItems: [FoodItem] { Array(activeItems.prefix(5)) }
 
     private var fridgeItems: [FoodItem]  { activeItems.filter { $0.storageLocationEnum == .fridge } }
@@ -37,11 +29,14 @@ struct HomeView: View {
     private var repository: FoodRepository { FoodRepository(context: modelContext) }
 
     var body: some View {
+        let attentionItems = HomeAttentionItems(items: activeItems)
+
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.xLarge) {
                     SyncStatusBanner(status: cloudKitService.syncStatus)
-                    summaryCards
+                    attentionSection(attentionItems)
+                    summaryCards(attentionItems)
                     locationBreakdown
                     recentSection
                 }
@@ -73,7 +68,36 @@ struct HomeView: View {
 
     // MARK: - Sub-views
 
-    private var summaryCards: some View {
+    private func attentionSection(_ attentionItems: HomeAttentionItems) -> some View {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            AppSectionHeader(
+                title: "home.needsAttention",
+                subtitle: "home.needsAttentionSubtitle"
+            )
+
+            if attentionItems.isEmpty {
+                HomeAttentionAllClearView()
+            } else {
+                if !attentionItems.expired.isEmpty {
+                    HomeActionGroup(
+                        kind: .expired,
+                        items: attentionItems.expired,
+                        onItemChange: loadItems
+                    )
+                }
+
+                if !attentionItems.useSoon.isEmpty {
+                    HomeActionGroup(
+                        kind: .useSoon,
+                        items: attentionItems.useSoon,
+                        onItemChange: loadItems
+                    )
+                }
+            }
+        }
+    }
+
+    private func summaryCards(_ attentionItems: HomeAttentionItems) -> some View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: AppSpacing.medium)], spacing: AppSpacing.medium) {
             SummaryCard(
                 title: NSLocalizedString("home.total", comment: ""),
@@ -83,13 +107,13 @@ struct HomeView: View {
             )
             SummaryCard(
                 title: NSLocalizedString("home.expiringSoon", comment: ""),
-                count: expiringSoonCount,
+                count: attentionItems.useSoon.count,
                 color: Color(uiColor: .systemOrange),
                 icon: "exclamationmark.circle.fill"
             )
             SummaryCard(
                 title: NSLocalizedString("home.expired", comment: ""),
-                count: expiredCount,
+                count: attentionItems.expired.count,
                 color: Color(uiColor: .systemRed),
                 icon: "xmark.circle.fill"
             )
@@ -140,6 +164,207 @@ struct HomeView: View {
 
     private func loadItems() {
         activeItems = (try? repository.fetchActive()) ?? []
+    }
+}
+
+// MARK: - Home actions
+
+private enum HomeActionKind {
+    case expired
+    case useSoon
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .expired:
+            "home.expiredNow"
+        case .useSoon:
+            "home.useSoon"
+        }
+    }
+
+    var subtitle: LocalizedStringKey {
+        switch self {
+        case .expired:
+            "home.expiredNowSubtitle"
+        case .useSoon:
+            "home.useSoonSubtitle"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .expired:
+            "exclamationmark.triangle.fill"
+        case .useSoon:
+            "clock.fill"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .expired:
+            Color(uiColor: .systemRed)
+        case .useSoon:
+            Color(uiColor: .systemOrange)
+        }
+    }
+
+    func items(in attentionItems: HomeAttentionItems) -> [FoodItem] {
+        switch self {
+        case .expired:
+            attentionItems.expired
+        case .useSoon:
+            attentionItems.useSoon
+        }
+    }
+}
+
+private struct HomeActionGroup: View {
+    private let maximumVisibleItems = 3
+
+    let kind: HomeActionKind
+    let items: [FoodItem]
+    let onItemChange: () -> Void
+
+    private var visibleItems: [FoodItem] {
+        Array(items.prefix(maximumVisibleItems))
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: AppSpacing.medium) {
+                VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                    Label(kind.title, systemImage: kind.systemImage)
+                        .font(.headline)
+                        .foregroundStyle(kind.tint)
+                    Text(kind.subtitle)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(.isHeader)
+
+                Spacer(minLength: AppSpacing.medium)
+
+                Text(items.count, format: .number)
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(kind.tint)
+                    .padding(.horizontal, AppSpacing.small)
+                    .padding(.vertical, AppSpacing.xSmall)
+                    .background(kind.tint.opacity(AppOpacity.badgeFill), in: Capsule())
+            }
+            .padding(AppSpacing.large)
+
+            Divider()
+
+            ForEach(Array(visibleItems.enumerated()), id: \.element.id) { index, item in
+                NavigationLink {
+                    FoodDetailView(item: item)
+                        .onDisappear(perform: onItemChange)
+                } label: {
+                    FoodRowView(item: item)
+                        .padding(.horizontal, AppSpacing.large)
+                        .padding(.vertical, AppSpacing.small)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint(Text("accessibility.openFoodDetails"))
+
+                if index < visibleItems.count - 1 {
+                    Divider()
+                        .padding(.leading, AppSpacing.large + AppSizing.defaultThumbnailSize + AppSpacing.medium)
+                }
+            }
+
+            if items.count > maximumVisibleItems {
+                Divider()
+                NavigationLink {
+                    HomeActionListView(kind: kind, onItemChange: onItemChange)
+                } label: {
+                    HStack {
+                        Text("home.viewAll")
+                            .font(.subheadline.weight(.semibold))
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.footnote.weight(.semibold))
+                    }
+                    .foregroundStyle(kind.tint)
+                    .padding(AppSpacing.large)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .appCardStyle(padding: 0)
+    }
+}
+
+private struct HomeAttentionAllClearView: View {
+    var body: some View {
+        HStack(alignment: .top, spacing: AppSpacing.medium) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.title2)
+                .foregroundStyle(Color(uiColor: .systemGreen))
+
+            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                Text("home.allClear")
+                    .font(.headline)
+                Text("home.allClearSubtitle")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .appCardStyle()
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct HomeActionListView: View {
+    @Environment(\.modelContext) private var modelContext
+    @State private var activeItems: [FoodItem] = []
+
+    let kind: HomeActionKind
+    let onItemChange: () -> Void
+
+    private var items: [FoodItem] {
+        kind.items(in: HomeAttentionItems(items: activeItems))
+    }
+
+    var body: some View {
+        Group {
+            if items.isEmpty {
+                EmptyStateView(message: "home.noActionItems", icon: "checkmark.circle")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List(items) { item in
+                    NavigationLink {
+                        FoodDetailView(item: item)
+                            .onDisappear(perform: reloadItems)
+                    } label: {
+                        FoodRowView(item: item)
+                            .padding(.vertical, AppSpacing.xSmall)
+                    }
+                    .accessibilityHint(Text("accessibility.openFoodDetails"))
+                }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+            }
+        }
+        .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle(kind.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear(perform: loadItems)
+    }
+
+    private func loadItems() {
+        activeItems = (try? FoodRepository(context: modelContext).fetchActive()) ?? []
+    }
+
+    private func reloadItems() {
+        loadItems()
+        onItemChange()
     }
 }
 
