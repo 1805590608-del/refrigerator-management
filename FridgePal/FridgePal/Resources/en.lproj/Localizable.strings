@@ -11,6 +11,7 @@
 "nav.addFood" = "Add Food";
 "nav.editFood" = "Edit Food";
 "nav.shopping" = "Shopping List";
+"nav.addShoppingItem" = "Add Shopping Item";
 "nav.history" = "History";
 "nav.settings" = "Settings";
 
@@ -30,6 +31,7 @@
 "home.allClearSubtitle" = "Nothing needs attention right now.";
 "home.viewAll" = "View All";
 "home.noActionItems" = "No items need this action.";
+"home.searchResults" = "Search Results";
 
 /* Search */
 "search.prompt" = "Search food...";
@@ -112,6 +114,8 @@
 "button.decreaseQuantity" = "Decrease Quantity";
 "button.addAgain" = "Add Again";
 "button.addToShoppingList" = "Add to Shopping List";
+"button.addShoppingItem" = "Add Shopping Item";
+"button.clearFilters" = "Clear Filters";
 
 /* Accessibility */
 "accessibility.addAgainFormat" = "Add %@ again";
@@ -157,8 +161,10 @@
 
 /* Empty States */
 "empty.noItems" = "No food items yet.\nTap + to add your first item!";
+"empty.noSearchResults" = "No matching food items.";
+"empty.noFilteredItems" = "No food matches the current search or filters.";
 "empty.noHistory" = "No history records.";
-"empty.noShoppingItems" = "Your shopping list is empty.\nAdd items from food details or history.";
+"empty.noShoppingItems" = "Your shopping list is empty.\nTap + or add items from food details and history.";
 
 /* Shopping */
 "shopping.toBuy" = "To Buy";
@@ -201,6 +207,7 @@
 "settings.display" = "Display";
 "settings.gridView" = "Grid View";
 "settings.colorScheme" = "Appearance";
+"settings.language" = "Language";
 "settings.data" = "Data";
 "settings.clearHistory" = "Clear History";
 "settings.about" = "About";
@@ -211,6 +218,11 @@
 "colorScheme.light" = "Light";
 "colorScheme.dark" = "Dark";
 
+/* Language */
+"language.system" = "System";
+"language.english" = "English";
+"language.simplifiedChinese" = "Simplified Chinese";
+
 /* Sync */
 "sync.syncing" = "Syncing...";
 "sync.synced" = "Up to Date";
@@ -219,6 +231,7 @@
 
 /* iCloud */
 "icloud.unavailable" = "iCloud is not available";
+"icloud.simulatorUnavailable" = "iCloud sync is unavailable in this Simulator build.";
 
 /* Notifications */
 "notification.title" = "Food Expiring Soon";
@@ -233,6 +246,7 @@
 
 /* Errors */
 "error.cameraPermission" = "Camera access is required. Please enable it in Settings → Privacy → Camera.";
+"error.photoLoad" = "The selected photo could not be loaded.";
 "error.repositoryUnavailable" = "Food storage is unavailable.";
 
 /* Bulk Actions */

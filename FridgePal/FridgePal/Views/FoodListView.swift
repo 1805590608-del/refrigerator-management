@@ -17,6 +17,7 @@ struct FoodListView: View {
     @State private var selection = BulkSelection()
     @State private var pendingBulkAction: BulkAction? = nil
     @State private var bulkResultMessage: String? = nil
+    @State private var operationError: String?
 
     private var repository: FoodRepository { FoodRepository(context: modelContext) }
     private var shoppingRepository: ShoppingRepository { ShoppingRepository(context: modelContext) }
@@ -50,12 +51,21 @@ struct FoodListView: View {
         return result
     }
 
+    private var hasActiveFilters: Bool {
+        !searchText.isEmpty ||
+        filterOption != .all ||
+        selectedCategory != nil ||
+        selectedLocation != nil
+    }
+
     var body: some View {
         NavigationStack {
             Group {
                 if items.isEmpty {
                     EmptyStateView(message: "empty.noItems", icon: "refrigerator")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if displayedItems.isEmpty {
+                    filteredEmptyState
                 } else if preferGridView && !isSelecting {
                     gridView
                 } else {
@@ -161,6 +171,19 @@ struct FoodListView: View {
             } message: {
                 Text(bulkResultMessage ?? "")
             }
+            .alert("alert.errorTitle", isPresented: Binding(
+                get: { operationError != nil },
+                set: { if !$0 { operationError = nil } }
+            )) {
+                Button("button.ok") { operationError = nil }
+            } message: {
+                Text(operationError ?? "")
+            }
+            .onChange(of: searchText) { _, _ in
+                guard isSelecting else { return }
+                selection.retain(in: displayedItems)
+                if selection.isEmpty { exitSelectionMode() }
+            }
             .onAppear { loadItems() }
         }
     }
@@ -199,6 +222,7 @@ struct FoodListView: View {
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
+        .refreshable { loadItems() }
     }
 
     private func selectableRow(for item: FoodItem) -> some View {
@@ -275,6 +299,7 @@ struct FoodListView: View {
             .padding(.horizontal, AppSpacing.large)
             .padding(.vertical, AppSpacing.large)
         }
+        .refreshable { loadItems() }
     }
 
     // MARK: Filter Menu
@@ -287,7 +312,11 @@ struct FoodListView: View {
                     Button {
                         sortOption = opt
                     } label: {
-                        Label(opt.localizedName, systemImage: sortOption == opt ? "checkmark" : "")
+                        if sortOption == opt {
+                            Label(opt.localizedName, systemImage: "checkmark")
+                        } else {
+                            Text(opt.localizedName)
+                        }
                     }
                 }
             } label: {
@@ -300,7 +329,11 @@ struct FoodListView: View {
                     Button {
                         filterOption = opt
                     } label: {
-                        Label(opt.localizedName, systemImage: filterOption == opt ? "checkmark" : "")
+                        if filterOption == opt {
+                            Label(opt.localizedName, systemImage: "checkmark")
+                        } else {
+                            Text(opt.localizedName)
+                        }
                     }
                 }
             } label: {
@@ -312,13 +345,21 @@ struct FoodListView: View {
                 Button {
                     selectedCategory = nil
                 } label: {
-                    Label("filter.all", systemImage: selectedCategory == nil ? "checkmark" : "")
+                    if selectedCategory == nil {
+                        Label("filter.all", systemImage: "checkmark")
+                    } else {
+                        Text("filter.all")
+                    }
                 }
                 ForEach(FoodCategory.allCases) { cat in
                     Button {
                         selectedCategory = cat
                     } label: {
-                        Label(cat.localizedName, systemImage: selectedCategory == cat ? "checkmark" : "")
+                        if selectedCategory == cat {
+                            Label(cat.localizedName, systemImage: "checkmark")
+                        } else {
+                            Text(cat.localizedName)
+                        }
                     }
                 }
             } label: {
@@ -330,40 +371,77 @@ struct FoodListView: View {
                 Button {
                     selectedLocation = nil
                 } label: {
-                    Label("filter.all", systemImage: selectedLocation == nil ? "checkmark" : "")
+                    if selectedLocation == nil {
+                        Label("filter.all", systemImage: "checkmark")
+                    } else {
+                        Text("filter.all")
+                    }
                 }
                 ForEach(StorageLocation.allCases) { loc in
                     Button {
                         selectedLocation = loc
                     } label: {
-                        Label(loc.localizedName, systemImage: selectedLocation == loc ? "checkmark" : "")
+                        if selectedLocation == loc {
+                            Label(loc.localizedName, systemImage: "checkmark")
+                        } else {
+                            Text(loc.localizedName)
+                        }
                     }
                 }
             } label: {
                 Label("menu.location", systemImage: "mappin")
             }
         } label: {
-            Image(systemName: "slider.horizontal.3")
+            Image(systemName: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "slider.horizontal.3")
         }
         .accessibilityLabel("button.filter")
+    }
+
+    private var filteredEmptyState: some View {
+        VStack(spacing: AppSpacing.medium) {
+            EmptyStateView(message: "empty.noFilteredItems", icon: "line.3.horizontal.decrease.circle")
+            Button("button.clearFilters", action: clearFilters)
+                .buttonStyle(.bordered)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(AppSpacing.large)
     }
 
     // MARK: Helpers
 
     private func loadItems() {
-        items = (try? repository.fetchActive()) ?? []
+        do {
+            items = try repository.fetchActive()
+        } catch {
+            operationError = error.localizedDescription
+        }
     }
 
     private func deleteItem(_ item: FoodItem) {
-        try? repository.delete(item)
-        loadItems()
-        NotificationService.shared.refreshSchedule(using: repository)
+        do {
+            try repository.delete(item)
+            loadItems()
+            NotificationService.shared.refreshSchedule(using: repository)
+        } catch {
+            operationError = error.localizedDescription
+        }
     }
 
     private func markEaten(_ item: FoodItem) {
-        try? repository.archiveItem(item, status: .eaten)
-        loadItems()
-        NotificationService.shared.refreshSchedule(using: repository)
+        do {
+            try repository.archiveItem(item, status: .eaten)
+            loadItems()
+            NotificationService.shared.refreshSchedule(using: repository)
+        } catch {
+            operationError = error.localizedDescription
+        }
+    }
+
+    private func clearFilters() {
+        searchText = ""
+        filterOption = .all
+        selectedCategory = nil
+        selectedLocation = nil
     }
 
     private func exitSelectionMode() {
@@ -377,25 +455,31 @@ struct FoodListView: View {
         guard !targets.isEmpty else { return }
 
         do {
+            let inventoryChanged: Bool
             switch action {
             case .markEaten:
                 try repository.archiveItems(targets, status: .eaten)
+                inventoryChanged = true
             case .markDiscarded:
                 try repository.archiveItems(targets, status: .discarded)
+                inventoryChanged = true
             case .addToShoppingList:
                 try shoppingRepository.add(from: targets)
+                inventoryChanged = false
             case .delete:
                 try repository.deleteItems(targets)
+                inventoryChanged = true
             }
             bulkResultMessage = action.completionMessage(count: targets.count)
+            loadItems()
+            selection.retain(in: displayedItems)
+            if selection.isEmpty { isSelecting = false }
+            if inventoryChanged {
+                NotificationService.shared.refreshSchedule(using: repository)
+            }
         } catch {
-            bulkResultMessage = error.localizedDescription
+            operationError = error.localizedDescription
         }
-
-        loadItems()
-        selection.retain(in: displayedItems)
-        if selection.isEmpty { isSelecting = false }
-        NotificationService.shared.refreshSchedule(using: repository)
     }
 }
 

@@ -16,21 +16,37 @@ final class PersistenceController {
 
         let configuration: ModelConfiguration
         if inMemory {
-            configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            configuration = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: true,
+                cloudKitDatabase: .none
+            )
         } else {
             // Use CloudKit private database for sync
+#if targetEnvironment(simulator)
+            configuration = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: false,
+                cloudKitDatabase: .none
+            )
+#else
             configuration = ModelConfiguration(
                 schema: schema,
                 isStoredInMemoryOnly: false,
                 cloudKitDatabase: .private("iCloud.com.fridgepal.app")
             )
+#endif
         }
 
         do {
             container = try ModelContainer(for: schema, configurations: [configuration])
         } catch {
             // Fall back to local-only if CloudKit unavailable
-            let fallback = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+            let fallback = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: false,
+                cloudKitDatabase: .none
+            )
             do {
                 container = try ModelContainer(for: schema, configurations: [fallback])
             } catch {

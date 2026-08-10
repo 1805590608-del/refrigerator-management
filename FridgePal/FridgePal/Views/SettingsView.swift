@@ -8,9 +8,10 @@ struct SettingsView: View {
     @AppStorage("reminderHour") private var reminderHour: Int = 9
     @AppStorage("preferGridView") private var preferGridView: Bool = false
     @AppStorage("colorScheme") private var colorSchemeRaw: String = "system"
+    @AppStorage(AppLanguageStorage.key) private var appLanguageRaw: String = AppLanguage.system.rawValue
     @Environment(\.modelContext) private var modelContext
 
-    @State private var showClearAlert = false
+    @State private var activeAlert: SettingsAlert?
     @State private var remind1 = true
     @State private var remind3 = true
     @State private var remind7 = true
@@ -29,11 +30,22 @@ struct SettingsView: View {
             .navigationTitle("nav.settings")
             .navigationBarTitleDisplayMode(.large)
             .onAppear { parseReminderDays() }
-            .alert("alert.clearHistoryTitle", isPresented: $showClearAlert) {
-                Button("button.clearAll", role: .destructive) { clearHistory() }
-                Button("button.cancel", role: .cancel) {}
-            } message: {
-                Text("alert.clearHistoryMessage")
+            .alert(item: $activeAlert) { alert in
+                switch alert {
+                case .clearConfirmation:
+                    Alert(
+                        title: Text("alert.clearHistoryTitle"),
+                        message: Text("alert.clearHistoryMessage"),
+                        primaryButton: .destructive(Text("button.clearAll"), action: clearHistory),
+                        secondaryButton: .cancel(Text("button.cancel"))
+                    )
+                case .error(let message):
+                    Alert(
+                        title: Text("alert.errorTitle"),
+                        message: Text(message),
+                        dismissButton: .default(Text("button.ok"))
+                    )
+                }
             }
         }
     }
@@ -130,6 +142,15 @@ struct SettingsView: View {
                 Text("colorScheme.light").tag("light")
                 Text("colorScheme.dark").tag("dark")
             }
+
+            Picker("settings.language", selection: $appLanguageRaw) {
+                Text("language.system").tag(AppLanguage.system.rawValue)
+                Text("language.english").tag(AppLanguage.english.rawValue)
+                Text("language.simplifiedChinese").tag(AppLanguage.simplifiedChinese.rawValue)
+            }
+            .onChange(of: appLanguageRaw) { _, newValue in
+                AppLanguageController.apply(newValue)
+            }
         } header: {
             Text("settings.display")
                 .textCase(nil)
@@ -140,7 +161,7 @@ struct SettingsView: View {
     private var dataSection: some View {
         Section {
             Button(role: .destructive) {
-                showClearAlert = true
+                activeAlert = .clearConfirmation
             } label: {
                 Label("settings.clearHistory", systemImage: "trash")
                     .foregroundStyle(Color(uiColor: .systemRed))
@@ -210,7 +231,25 @@ struct SettingsView: View {
     }
 
     private func clearHistory() {
-        try? FoodRepository(context: modelContext).clearAllHistory()
+        do {
+            try FoodRepository(context: modelContext).clearAllHistory()
+        } catch {
+            activeAlert = .error(error.localizedDescription)
+        }
+    }
+}
+
+private enum SettingsAlert: Identifiable {
+    case clearConfirmation
+    case error(String)
+
+    var id: String {
+        switch self {
+        case .clearConfirmation:
+            "clearConfirmation"
+        case .error(let message):
+            "error:\(message)"
+        }
     }
 }
 

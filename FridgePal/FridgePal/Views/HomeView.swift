@@ -7,6 +7,7 @@ struct HomeView: View {
     @State private var activeItems: [FoodItem] = []
     @State private var searchText = ""
     @State private var showAddFood = false
+    @State private var dataError: String?
 
     // MARK: - Computed stats
 
@@ -19,11 +20,17 @@ struct HomeView: View {
     private var pantryItems: [FoodItem]  { activeItems.filter { $0.storageLocationEnum == .pantry } }
 
     private var filteredItems: [FoodItem] {
-        guard !searchText.isEmpty else { return activeItems }
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return activeItems }
         return activeItems.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText) ||
-            $0.categoryEnum.localizedName.localizedCaseInsensitiveContains(searchText)
+            $0.name.localizedCaseInsensitiveContains(query) ||
+            $0.categoryEnum.localizedName.localizedCaseInsensitiveContains(query) ||
+            $0.storageLocationEnum.localizedName.localizedCaseInsensitiveContains(query)
         }
+    }
+
+    private var isSearching: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var repository: FoodRepository { FoodRepository(context: modelContext) }
@@ -35,14 +42,20 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.xLarge) {
                     SyncStatusBanner(status: cloudKitService.syncStatus)
-                    attentionSection(attentionItems)
-                    summaryCards(attentionItems)
-                    locationBreakdown
-                    recentSection
+                    if isSearching {
+                        searchResultsSection
+                    } else {
+                        attentionSection(attentionItems)
+                        summaryCards(attentionItems)
+                        locationBreakdown
+                        recentSection
+                    }
                 }
                 .padding(.horizontal, AppSpacing.large)
-                .padding(.vertical, AppSpacing.large)
+                .padding(.top, AppSpacing.large)
+                .padding(.bottom, AppSpacing.xxLarge)
             }
+            .refreshable { loadItems() }
             .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("nav.home")
             .navigationBarTitleDisplayMode(.large)
@@ -61,6 +74,14 @@ struct HomeView: View {
             .sheet(isPresented: $showAddFood) {
                 AddEditFoodView(item: nil)
                     .onDisappear { loadItems() }
+            }
+            .alert("alert.errorTitle", isPresented: Binding(
+                get: { dataError != nil },
+                set: { if !$0 { dataError = nil } }
+            )) {
+                Button("button.ok") { dataError = nil }
+            } message: {
+                Text(dataError ?? "")
             }
             .onAppear { loadItems() }
         }
@@ -98,37 +119,75 @@ struct HomeView: View {
     }
 
     private func summaryCards(_ attentionItems: HomeAttentionItems) -> some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: AppSpacing.medium)], spacing: AppSpacing.medium) {
-            SummaryCard(
-                title: NSLocalizedString("home.total", comment: ""),
-                count: totalCount,
-                color: Color(uiColor: .systemBlue),
-                icon: "archivebox.fill"
-            )
-            SummaryCard(
-                title: NSLocalizedString("home.expiringSoon", comment: ""),
-                count: attentionItems.useSoon.count,
-                color: Color(uiColor: .systemOrange),
-                icon: "exclamationmark.circle.fill"
-            )
-            SummaryCard(
-                title: NSLocalizedString("home.expired", comment: ""),
-                count: attentionItems.expired.count,
-                color: Color(uiColor: .systemRed),
-                icon: "xmark.circle.fill"
-            )
+        LazyVGrid(
+            columns: Array(
+                repeating: GridItem(.flexible(), spacing: AppSpacing.medium),
+                count: 3
+            ),
+            spacing: AppSpacing.medium
+        ) {
+            NavigationLink {
+                HomeMetricListView(selection: .all, onItemChange: loadItems)
+            } label: {
+                SummaryCard(
+                    title: NSLocalizedString("home.total", comment: ""),
+                    count: totalCount,
+                    color: Color(uiColor: .systemBlue),
+                    icon: "refrigerator.fill"
+                )
+            }
+            .buttonStyle(.plain)
+
+            NavigationLink {
+                HomeMetricListView(selection: .expiringSoon, onItemChange: loadItems)
+            } label: {
+                SummaryCard(
+                    title: NSLocalizedString("home.expiringSoon", comment: ""),
+                    count: attentionItems.useSoon.count,
+                    color: Color(uiColor: .systemOrange),
+                    icon: "clock.fill"
+                )
+            }
+            .buttonStyle(.plain)
+
+            NavigationLink {
+                HomeMetricListView(selection: .expired, onItemChange: loadItems)
+            } label: {
+                SummaryCard(
+                    title: NSLocalizedString("home.expired", comment: ""),
+                    count: attentionItems.expired.count,
+                    color: Color(uiColor: .systemRed),
+                    icon: "exclamationmark.triangle.fill"
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 
     private var locationBreakdown: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
             AppSectionHeader(title: "home.byLocation")
-            HStack(spacing: AppSpacing.medium) {
-                LocationCard(location: .fridge,  count: fridgeItems.count)
-                LocationCard(location: .freezer, count: freezerItems.count)
-                LocationCard(location: .pantry,  count: pantryItems.count)
+            LazyVGrid(
+                columns: Array(
+                    repeating: GridItem(.flexible(), spacing: AppSpacing.medium),
+                    count: 3
+                ),
+                spacing: AppSpacing.medium
+            ) {
+                locationLink(for: .fridge, count: fridgeItems.count)
+                locationLink(for: .freezer, count: freezerItems.count)
+                locationLink(for: .pantry, count: pantryItems.count)
             }
         }
+    }
+
+    private func locationLink(for location: StorageLocation, count: Int) -> some View {
+        NavigationLink {
+            HomeMetricListView(selection: .location(location), onItemChange: loadItems)
+        } label: {
+            LocationCard(location: location, count: count)
+        }
+        .buttonStyle(.plain)
     }
 
     private var recentSection: some View {
@@ -162,8 +221,45 @@ struct HomeView: View {
         }
     }
 
+    private var searchResultsSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            AppSectionHeader(title: "home.searchResults")
+
+            if filteredItems.isEmpty {
+                EmptyStateView(message: "empty.noSearchResults", icon: "magnifyingglass")
+                    .frame(maxWidth: .infinity)
+                    .appCardStyle()
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(filteredItems.enumerated()), id: \.element.id) { index, item in
+                        NavigationLink {
+                            FoodDetailView(item: item)
+                                .onDisappear(perform: loadItems)
+                        } label: {
+                            FoodRowView(item: item)
+                                .padding(.horizontal, AppSpacing.large)
+                                .padding(.vertical, AppSpacing.medium)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint(Text("accessibility.openFoodDetails"))
+
+                        if index < filteredItems.count - 1 {
+                            Divider()
+                                .padding(.leading, AppSpacing.large + AppSizing.defaultThumbnailSize + AppSpacing.medium)
+                        }
+                    }
+                }
+                .appCardStyle(padding: 0)
+            }
+        }
+    }
+
     private func loadItems() {
-        activeItems = (try? repository.fetchActive()) ?? []
+        do {
+            activeItems = try repository.fetchActive()
+        } catch {
+            dataError = error.localizedDescription
+        }
     }
 }
 
@@ -368,6 +464,86 @@ private struct HomeActionListView: View {
     }
 }
 
+private enum HomeMetricSelection {
+    case all
+    case expiringSoon
+    case expired
+    case location(StorageLocation)
+
+    var title: String {
+        switch self {
+        case .all:
+            NSLocalizedString("home.total", comment: "")
+        case .expiringSoon:
+            NSLocalizedString("home.expiringSoon", comment: "")
+        case .expired:
+            NSLocalizedString("home.expired", comment: "")
+        case .location(let location):
+            location.localizedName
+        }
+    }
+
+    func filter(_ items: [FoodItem]) -> [FoodItem] {
+        switch self {
+        case .all:
+            items
+        case .expiringSoon:
+            items.filter { $0.expirationState == .expiringSoon }
+        case .expired:
+            items.filter { $0.expirationState == .expired }
+        case .location(let location):
+            items.filter { $0.storageLocationEnum == location }
+        }
+    }
+}
+
+private struct HomeMetricListView: View {
+    @Environment(\.modelContext) private var modelContext
+    @State private var activeItems: [FoodItem] = []
+
+    let selection: HomeMetricSelection
+    let onItemChange: () -> Void
+
+    private var items: [FoodItem] {
+        selection.filter(activeItems)
+    }
+
+    var body: some View {
+        Group {
+            if items.isEmpty {
+                EmptyStateView(message: "empty.noItems", icon: "refrigerator")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List(items) { item in
+                    NavigationLink {
+                        FoodDetailView(item: item)
+                            .onDisappear(perform: reloadItems)
+                    } label: {
+                        FoodRowView(item: item)
+                            .padding(.vertical, AppSpacing.xSmall)
+                    }
+                    .accessibilityHint(Text("accessibility.openFoodDetails"))
+                }
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+            }
+        }
+        .background(Color(uiColor: .systemGroupedBackground))
+        .navigationTitle(selection.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear(perform: loadItems)
+    }
+
+    private func loadItems() {
+        activeItems = (try? FoodRepository(context: modelContext).fetchActive()) ?? []
+    }
+
+    private func reloadItems() {
+        loadItems()
+        onItemChange()
+    }
+}
+
 // MARK: - SummaryCard
 
 struct SummaryCard: View {
@@ -377,23 +553,29 @@ struct SummaryCard: View {
     let icon: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.small) {
+        VStack(spacing: AppSpacing.small) {
             Image(systemName: icon)
-                .font(.headline)
-                .foregroundStyle(color)
-                .frame(width: 36, height: 36)
-                .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
+                .symbolRenderingMode(.monochrome)
+                .font(.system(size: 19, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 44, height: 44)
+                .background(color.gradient, in: RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
+                .shadow(color: color.opacity(0.22), radius: 5, y: 3)
             Text("\(count)")
-                .font(.title2.weight(.semibold))
+                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .monospacedDigit()
                 .foregroundStyle(.primary)
             Text(title)
-                .font(.footnote)
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(.secondary)
-                .multilineTextAlignment(.leading)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity)
-        .frame(minHeight: 132, alignment: .topLeading)
-        .appCardStyle()
+        .frame(minHeight: 126)
+        .padding(AppSpacing.medium)
+        .background(HomeMetricCardBackground(tint: color))
         .accessibilityElement(children: .combine)
     }
 }
@@ -406,18 +588,71 @@ struct LocationCard: View {
 
     var body: some View {
         VStack(spacing: AppSpacing.small) {
-            Text(location.emoji)
-                .font(.title2)
+            Image(systemName: icon)
+                .symbolRenderingMode(.monochrome)
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 42, height: 42)
+                .background(tint.gradient, in: RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
+                .shadow(color: tint.opacity(0.2), radius: 4, y: 2)
             Text("\(count)")
-                .font(.headline.weight(.semibold))
+                .font(.system(size: 25, weight: .bold, design: .rounded))
+                .monospacedDigit()
             Text(location.localizedName)
-                .font(.footnote)
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, AppSpacing.medium)
-        .appCardStyle()
+        .frame(minHeight: 116)
+        .padding(AppSpacing.medium)
+        .background(HomeMetricCardBackground(tint: tint))
         .accessibilityElement(children: .combine)
+    }
+
+    private var icon: String {
+        switch location {
+        case .fridge:
+            "refrigerator.fill"
+        case .freezer:
+            "snowflake"
+        case .pantry:
+            "shippingbox.fill"
+        }
+    }
+
+    private var tint: Color {
+        switch location {
+        case .fridge:
+            Color(uiColor: .systemBlue)
+        case .freezer:
+            Color(uiColor: .systemCyan)
+        case .pantry:
+            Color(uiColor: .systemBrown)
+        }
+    }
+}
+
+private struct HomeMetricCardBackground: View {
+    let tint: Color
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: AppCornerRadius.large, style: .continuous)
+            .fill(
+                LinearGradient(
+                    colors: [
+                        tint.opacity(0.16),
+                        Color(uiColor: .secondarySystemGroupedBackground)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: AppCornerRadius.large, style: .continuous)
+                    .strokeBorder(tint.opacity(0.16), lineWidth: 1)
+            }
     }
 }
 

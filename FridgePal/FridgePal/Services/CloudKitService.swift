@@ -21,13 +21,20 @@ final class CloudKitService: ObservableObject {
     @Published var syncStatus: SyncStatus = .idle
     @Published var isICloudAvailable: Bool = false
 
-    private let container = CKContainer(identifier: "iCloud.com.fridgepal.app")
+    private var container: CKContainer {
+        CKContainer(identifier: "iCloud.com.fridgepal.app")
+    }
 
     private init() {
+        guard NSClassFromString("XCTestCase") == nil else { return }
         Task { await checkAccountStatus() }
     }
 
     func checkAccountStatus() async {
+#if targetEnvironment(simulator)
+        isICloudAvailable = false
+        syncStatus = .error(NSLocalizedString("icloud.simulatorUnavailable", comment: ""))
+#else
         do {
             let status = try await container.accountStatus()
             switch status {
@@ -45,6 +52,7 @@ final class CloudKitService: ObservableObject {
             isICloudAvailable = false
             syncStatus = .error(error.localizedDescription)
         }
+#endif
     }
 
     func markSyncing() { syncStatus = .syncing }

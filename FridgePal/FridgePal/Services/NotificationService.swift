@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import UserNotifications
 
 // MARK: - Notification Service
@@ -8,6 +9,7 @@ final class NotificationService {
     static let threadIdentifier = "fridgepal.expiration"
 
     private let center = UNUserNotificationCenter.current()
+    private let logger = Logger(subsystem: "com.fridgepal.app", category: "Notifications")
 
     private init() {}
 
@@ -17,6 +19,7 @@ final class NotificationService {
         do {
             return try await center.requestAuthorization(options: [.alert, .sound, .badge])
         } catch {
+            logger.error("Notification authorization failed: \(error.localizedDescription, privacy: .public)")
             return false
         }
     }
@@ -36,15 +39,20 @@ final class NotificationService {
 
         for reminder in reminders {
             center.add(request(for: reminder)) { error in
-                if let error { print("Notification error: \(error)") }
+                if let error {
+                    self.logger.error("Scheduling notification failed: \(error.localizedDescription, privacy: .public)")
+                }
             }
         }
     }
 
     /// Convenience overload that reads the active inventory from a repository.
     func refreshSchedule(using repository: FoodRepositoryProtocol, settings: ReminderSettings = .current()) {
-        let items = (try? repository.fetchActive()) ?? []
-        refreshSchedule(for: items, settings: settings)
+        do {
+            refreshSchedule(for: try repository.fetchActive(), settings: settings)
+        } catch {
+            logger.error("Keeping existing reminders because inventory loading failed: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     // MARK: - Private

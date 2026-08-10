@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct FoodDetailView: View {
+    private let minimumQuantity = 0.1
+    private let maximumQuantity = 9_999.0
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
@@ -164,9 +167,9 @@ struct FoodDetailView: View {
                 } label: {
                     Image(systemName: "minus.circle.fill")
                         .font(.title2)
-                        .foregroundStyle(item.quantity > 1 ? .accentColor : .secondary)
+                        .foregroundStyle(item.quantity > minimumQuantity ? Color.accentColor : Color.secondary)
                 }
-                .disabled(item.quantity <= 1)
+                .disabled(item.quantity <= minimumQuantity)
                 .accessibilityLabel("button.decreaseQuantity")
 
                 Text("\(item.quantity.formatted()) \(item.unit)")
@@ -178,8 +181,9 @@ struct FoodDetailView: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.title2)
-                        .foregroundStyle(.accentColor)
+                        .foregroundStyle(item.quantity < maximumQuantity ? Color.accentColor : Color.secondary)
                 }
+                .disabled(item.quantity >= maximumQuantity)
                 .accessibilityLabel("button.increaseQuantity")
             }
         }
@@ -268,24 +272,40 @@ struct FoodDetailView: View {
     }
 
     private func adjustQuantity(by delta: Double) {
-        let newQ = max(1, item.quantity + delta)
+        let newQ = min(maximumQuantity, max(minimumQuantity, item.quantity + delta))
+        let previousQuantity = item.quantity
+        let previousUpdatedAt = item.updatedAt
         item.quantity = newQ
         item.updatedAt = Date()
-        try? FoodRepository(context: modelContext).save(item)
+        do {
+            try FoodRepository(context: modelContext).save(item)
+        } catch {
+            item.quantity = previousQuantity
+            item.updatedAt = previousUpdatedAt
+            activeAlert = .error(error.localizedDescription)
+        }
     }
 
     private func archive(as status: FoodStatus) {
         let repository = FoodRepository(context: modelContext)
-        try? repository.archiveItem(item, status: status)
-        NotificationService.shared.refreshSchedule(using: repository)
-        dismiss()
+        do {
+            try repository.archiveItem(item, status: status)
+            NotificationService.shared.refreshSchedule(using: repository)
+            dismiss()
+        } catch {
+            activeAlert = .error(error.localizedDescription)
+        }
     }
 
     private func deleteItem() {
         let repository = FoodRepository(context: modelContext)
-        try? repository.delete(item)
-        NotificationService.shared.refreshSchedule(using: repository)
-        dismiss()
+        do {
+            try repository.delete(item)
+            NotificationService.shared.refreshSchedule(using: repository)
+            dismiss()
+        } catch {
+            activeAlert = .error(error.localizedDescription)
+        }
     }
 }
 

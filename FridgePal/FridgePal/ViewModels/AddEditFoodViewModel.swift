@@ -158,7 +158,7 @@ final class AddEditFoodViewModel: ObservableObject {
         nameError = nil
         quantityError = nil
 
-        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
             nameError = NSLocalizedString("validation.nameRequired", comment: "")
             valid = false
@@ -184,7 +184,7 @@ final class AddEditFoodViewModel: ObservableObject {
 
         isSaving = true
         defer { isSaving = false }
-        let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         name = trimmedName
         let draft = currentDraft
 

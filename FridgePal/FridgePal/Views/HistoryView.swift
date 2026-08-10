@@ -58,6 +58,7 @@ struct HistoryView: View {
                     }
                     .listStyle(.insetGrouped)
                     .scrollContentBackground(.hidden)
+                    .refreshable { loadRecords() }
                 }
             }
             .background(Color(uiColor: .systemGroupedBackground))
@@ -187,7 +188,11 @@ struct HistoryView: View {
     }
 
     private func loadRecords() {
-        records = (try? repo.fetchHistory()) ?? []
+        do {
+            records = try repo.fetchHistory()
+        } catch {
+            activeAlert = .error(error.localizedDescription)
+        }
     }
 
     private func addToShoppingList(_ record: HistoryRecord) {
@@ -200,13 +205,21 @@ struct HistoryView: View {
     }
 
     private func deleteRecord(_ record: HistoryRecord) {
-        try? repo.deleteHistory(record)
-        loadRecords()
+        do {
+            try repo.deleteHistory(record)
+            loadRecords()
+        } catch {
+            activeAlert = .error(error.localizedDescription)
+        }
     }
 
     private func clearAll() {
-        try? repo.clearAllHistory()
-        loadRecords()
+        do {
+            try repo.clearAllHistory()
+            loadRecords()
+        } catch {
+            activeAlert = .error(error.localizedDescription)
+        }
     }
 }
 

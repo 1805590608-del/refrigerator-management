@@ -74,9 +74,17 @@ struct AddEditFoodView: View {
             .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
             .onChange(of: selectedPhotoItem) { _, newItem in
                 Task {
-                    if let data = try? await newItem?.loadTransferable(type: Data.self),
-                       let uiImage = UIImage(data: data) {
+                    do {
+                        guard let data = try await newItem?.loadTransferable(type: Data.self),
+                              let uiImage = UIImage(data: data) else {
+                            if newItem != nil {
+                                viewModel.saveError = NSLocalizedString("error.photoLoad", comment: "")
+                            }
+                            return
+                        }
                         viewModel.setImage(uiImage)
+                    } catch {
+                        viewModel.saveError = error.localizedDescription
                     }
                 }
             }

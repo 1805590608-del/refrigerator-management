@@ -70,19 +70,19 @@ enum FoodStatus: String, Codable, CaseIterable, Identifiable {
 
 @Model
 final class FoodItem {
-    @Attribute(.unique) var id: UUID
-    var name: String
-    var category: String          // stored as rawValue
-    var storageLocation: String   // stored as rawValue
-    var quantity: Double
-    var unit: String
-    var purchaseDate: Date
+    var id: UUID = UUID()
+    var name: String = ""
+    var category: String = FoodCategory.other.rawValue
+    var storageLocation: String = StorageLocation.fridge.rawValue
+    var quantity: Double = 1
+    var unit: String = "item"
+    var purchaseDate: Date = Date()
     var expirationDate: Date?
     @Attribute(.externalStorage) var photoData: Data?
-    var notes: String
-    var status: String            // stored as rawValue
-    var createdAt: Date
-    var updatedAt: Date
+    var notes: String = ""
+    var status: String = FoodStatus.active.rawValue
+    var createdAt: Date = Date()
+    var updatedAt: Date = Date()
 
     init(
         id: UUID = UUID(),
@@ -134,9 +134,15 @@ final class FoodItem {
     /// Expiration state based on current date
     var expirationState: ExpirationState {
         guard let exp = expirationDate else { return .noDate }
-        let now = Date()
-        if exp < now { return .expired }
-        let daysLeft = Calendar.current.dateComponents([.day], from: now, to: exp).day ?? 0
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let expirationDay = calendar.startOfDay(for: exp)
+        if expirationDay < today { return .expired }
+        let daysLeft = calendar.dateComponents(
+            [.day],
+            from: today,
+            to: expirationDay
+        ).day ?? 0
         if daysLeft <= 3 { return .expiringSoon }
         return .fresh
     }

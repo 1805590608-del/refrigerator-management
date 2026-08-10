@@ -23,12 +23,12 @@ final class ExpirationStateTests: XCTestCase {
     }
 
     func testExpiringSoonItem_exactlyToday() {
-        // Expires today - should be expiringSoon (0 days left ≤ 3)
+        // Date-only expiration remains usable through the selected day.
         let item = FoodItem(
             name: "Cheese",
             expirationDate: Calendar.current.startOfDay(for: Date())
         )
-        XCTAssertEqual(item.expirationState, .expired) // already past start of today
+        XCTAssertEqual(item.expirationState, .expiringSoon)
     }
 
     func testExpiredItem() {
@@ -563,7 +563,11 @@ final class ShoppingRepositoryTests: XCTestCase {
 
     func testAddCompleteReopenAndDeleteWorkflowPersists() throws {
         let schema = Schema([ShoppingItem.self])
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let configuration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
         let container = try ModelContainer(for: schema, configurations: [configuration])
         let repository = ShoppingRepository(context: container.mainContext)
         let source = FoodItem(name: "Apples", category: .fruit, quantity: 3, unit: "bag")
@@ -580,6 +584,30 @@ final class ShoppingRepositoryTests: XCTestCase {
 
         try repository.delete(shoppingItem)
         XCTAssertTrue(try repository.fetchAll().isEmpty)
+    }
+
+    func testManualAddPersistsEnteredValues() throws {
+        let schema = Schema([ShoppingItem.self])
+        let configuration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let repository = ShoppingRepository(context: container.mainContext)
+
+        let item = try repository.add(
+            name: "Coffee",
+            category: .beverage,
+            preferredQuantity: 2,
+            unit: "bag"
+        )
+
+        XCTAssertEqual(item.name, "Coffee")
+        XCTAssertEqual(item.categoryEnum, .beverage)
+        XCTAssertEqual(item.preferredQuantity, 2)
+        XCTAssertEqual(item.unit, "bag")
+        XCTAssertEqual(try repository.fetchAll().map(\.id), [item.id])
     }
 }
 
@@ -656,18 +684,28 @@ final class BulkSelectionTests: XCTestCase {
 @MainActor
 final class BulkRepositoryTests: XCTestCase {
 
-    private func makeRepositories() throws -> (FoodRepository, ShoppingRepository) {
+    private func makeRepositories() throws -> (
+        container: ModelContainer,
+        food: FoodRepository,
+        shopping: ShoppingRepository
+    ) {
         let schema = Schema([FoodItem.self, HistoryRecord.self, ShoppingItem.self])
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let configuration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
         let container = try ModelContainer(for: schema, configurations: [configuration])
         return (
+            container,
             FoodRepository(context: container.mainContext),
             ShoppingRepository(context: container.mainContext)
         )
     }
 
     func testArchiveItemsMovesEverySelectedFoodToHistory() throws {
-        let (foodRepository, _) = try makeRepositories()
+        let repositories = try makeRepositories()
+        let foodRepository = repositories.food
         let milk = FoodItem(name: "Milk")
         let bread = FoodItem(name: "Bread")
         let eggs = FoodItem(name: "Eggs")
@@ -682,7 +720,8 @@ final class BulkRepositoryTests: XCTestCase {
     }
 
     func testDeleteItemsRemovesSelectedFoodsWithoutHistory() throws {
-        let (foodRepository, _) = try makeRepositories()
+        let repositories = try makeRepositories()
+        let foodRepository = repositories.food
         let milk = FoodItem(name: "Milk")
         let bread = FoodItem(name: "Bread")
         for item in [milk, bread] { try foodRepository.save(item) }
@@ -694,7 +733,9 @@ final class BulkRepositoryTests: XCTestCase {
     }
 
     func testEmptyBatchesAreNoOps() throws {
-        let (foodRepository, shoppingRepository) = try makeRepositories()
+        let repositories = try makeRepositories()
+        let foodRepository = repositories.food
+        let shoppingRepository = repositories.shopping
         let milk = FoodItem(name: "Milk")
         try foodRepository.save(milk)
 
@@ -707,7 +748,9 @@ final class BulkRepositoryTests: XCTestCase {
     }
 
     func testBulkAddToShoppingListSnapshotsEverySelectedFood() throws {
-        let (foodRepository, shoppingRepository) = try makeRepositories()
+        let repositories = try makeRepositories()
+        let foodRepository = repositories.food
+        let shoppingRepository = repositories.shopping
         let milk = FoodItem(name: "Milk", category: .dairy, quantity: 2, unit: "bottle")
         let apples = FoodItem(name: "Apples", category: .fruit, quantity: 3, unit: "bag")
         for item in [milk, apples] { try foodRepository.save(item) }
@@ -718,6 +761,20 @@ final class BulkRepositoryTests: XCTestCase {
         XCTAssertEqual(Set(try shoppingRepository.fetchAll().map(\.name)), ["Milk", "Apples"])
         // Foods stay in the fridge when they are only queued for repurchase.
         XCTAssertEqual(try foodRepository.fetchActive().count, 2)
+    }
+
+    func testSavingExistingFoodUpdatesWithoutCreatingDuplicate() throws {
+        let repositories = try makeRepositories()
+        let foodRepository = repositories.food
+        let item = FoodItem(name: "Milk")
+        try foodRepository.save(item)
+
+        item.name = "Oat Milk"
+        try foodRepository.save(item)
+
+        let savedItems = try foodRepository.fetchActive()
+        XCTAssertEqual(savedItems.count, 1)
+        XCTAssertEqual(savedItems.first?.name, "Oat Milk")
     }
 }
 

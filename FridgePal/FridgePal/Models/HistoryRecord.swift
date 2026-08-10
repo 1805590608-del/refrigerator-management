@@ -4,19 +4,19 @@ import SwiftData
 /// Represents a consumed/discarded/expired food record for history tracking.
 @Model
 final class HistoryRecord {
-    @Attribute(.unique) var id: UUID
-    var foodName: String
-    var category: String
-    var storageLocation: String
-    var quantity: Double
-    var unit: String
-    var purchaseDate: Date
+    var id: UUID = UUID()
+    var foodName: String = ""
+    var category: String = FoodCategory.other.rawValue
+    var storageLocation: String = StorageLocation.fridge.rawValue
+    var quantity: Double = 1
+    var unit: String = "item"
+    var purchaseDate: Date = Date()
     var expirationDate: Date?
     @Attribute(.externalStorage) var photoData: Data?
-    var notes: String
-    var finalStatus: String        // eaten | discarded | expired
-    var archivedAt: Date
-    var createdAt: Date
+    var notes: String = ""
+    var finalStatus: String = FoodStatus.expired.rawValue
+    var archivedAt: Date = Date()
+    var createdAt: Date = Date()
 
     init(from item: FoodItem, finalStatus: FoodStatus) {
         self.id = UUID()

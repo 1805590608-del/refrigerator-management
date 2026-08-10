@@ -4,15 +4,15 @@ import SwiftData
 /// A standalone snapshot of an inventory or history item to repurchase.
 @Model
 final class ShoppingItem {
-    @Attribute(.unique) var id: UUID
-    var name: String
-    var category: String
-    var preferredQuantity: Double
-    var unit: String
-    var isCompleted: Bool
-    var createdAt: Date
+    var id: UUID = UUID()
+    var name: String = ""
+    var category: String = FoodCategory.other.rawValue
+    var preferredQuantity: Double = 1
+    var unit: String = "item"
+    var isCompleted: Bool = false
+    var createdAt: Date = Date()
     var completedAt: Date?
-    var updatedAt: Date
+    var updatedAt: Date = Date()
 
     init(
         id: UUID = UUID(),

@@ -11,6 +11,7 @@
 "nav.addFood" = "添加食物";
 "nav.editFood" = "编辑食物";
 "nav.shopping" = "购物清单";
+"nav.addShoppingItem" = "添加购物项目";
 "nav.history" = "历史记录";
 "nav.settings" = "设置";
 
@@ -30,6 +31,7 @@
 "home.allClearSubtitle" = "目前没有需要处理的食物。";
 "home.viewAll" = "查看全部";
 "home.noActionItems" = "没有食物需要此操作。";
+"home.searchResults" = "搜索结果";
 
 /* 搜索 */
 "search.prompt" = "搜索食物...";
@@ -112,6 +114,8 @@
 "button.decreaseQuantity" = "减少数量";
 "button.addAgain" = "再次添加";
 "button.addToShoppingList" = "加入购物清单";
+"button.addShoppingItem" = "添加购物项目";
+"button.clearFilters" = "清除筛选";
 
 /* 辅助功能 */
 "accessibility.addAgainFormat" = "再次添加“%@”";
@@ -157,8 +161,10 @@
 
 /* 空状态 */
 "empty.noItems" = "暂无食物。\n点击 + 添加第一个食物！";
+"empty.noSearchResults" = "没有找到匹配的食物。";
+"empty.noFilteredItems" = "没有食物符合当前搜索或筛选条件。";
 "empty.noHistory" = "暂无历史记录。";
-"empty.noShoppingItems" = "购物清单为空。\n可从食物详情或历史记录中添加。";
+"empty.noShoppingItems" = "购物清单为空。\n点击 +，或从食物详情和历史记录中添加。";
 
 /* 购物清单 */
 "shopping.toBuy" = "待购买";
@@ -202,6 +208,7 @@
 "settings.display" = "显示";
 "settings.gridView" = "网格视图";
 "settings.colorScheme" = "外观";
+"settings.language" = "语言";
 "settings.data" = "数据管理";
 "settings.clearHistory" = "清空历史记录";
 "settings.about" = "关于";
@@ -212,6 +219,11 @@
 "colorScheme.light" = "浅色";
 "colorScheme.dark" = "深色";
 
+/* 语言 */
+"language.system" = "跟随系统";
+"language.english" = "English";
+"language.simplifiedChinese" = "简体中文";
+
 /* 同步状态 */
 "sync.syncing" = "同步中...";
 "sync.synced" = "已同步";
@@ -220,6 +232,7 @@
 
 /* iCloud */
 "icloud.unavailable" = "iCloud 不可用";
+"icloud.simulatorUnavailable" = "当前模拟器构建不可使用 iCloud 同步。";
 
 /* 通知 */
 "notification.title" = "食物即将过期";
@@ -234,6 +247,7 @@
 
 /* 错误 */
 "error.cameraPermission" = "需要相机权限。请在「设置」>「隐私」>「相机」中开启。";
+"error.photoLoad" = "无法加载所选照片。";
 "error.repositoryUnavailable" = "食物存储不可用。";
 
 /* 批量操作 */

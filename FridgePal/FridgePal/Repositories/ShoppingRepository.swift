@@ -3,6 +3,12 @@ import SwiftData
 
 protocol ShoppingRepositoryProtocol {
     func fetchAll() throws -> [ShoppingItem]
+    @discardableResult func add(
+        name: String,
+        category: FoodCategory,
+        preferredQuantity: Double,
+        unit: String
+    ) throws -> ShoppingItem
     @discardableResult func add(from item: FoodItem) throws -> ShoppingItem
     @discardableResult func add(from items: [FoodItem]) throws -> [ShoppingItem]
     @discardableResult func add(from record: HistoryRecord) throws -> ShoppingItem
@@ -22,6 +28,24 @@ final class ShoppingRepository: ShoppingRepositoryProtocol {
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         return try context.fetch(descriptor)
+    }
+
+    @discardableResult
+    func add(
+        name: String,
+        category: FoodCategory,
+        preferredQuantity: Double,
+        unit: String
+    ) throws -> ShoppingItem {
+        let shoppingItem = ShoppingItem(
+            name: name,
+            category: category,
+            preferredQuantity: preferredQuantity,
+            unit: unit
+        )
+        context.insert(shoppingItem)
+        try context.save()
+        return shoppingItem
     }
 
     @discardableResult
