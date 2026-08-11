@@ -28,6 +28,10 @@ extension View {
     func appCardStyle(padding: CGFloat = AppSpacing.large) -> some View {
         modifier(AppCardModifier(contentPadding: padding))
     }
+
+    func appToastOverlay() -> some View {
+        modifier(AppToastOverlayModifier())
+    }
 }
 
 private struct AppCardModifier: ViewModifier {
@@ -104,6 +108,116 @@ struct StatusBadge: View {
             .padding(.vertical, AppSpacing.xSmall)
             .background(tint.opacity(AppOpacity.badgeFill), in: Capsule())
             .foregroundStyle(tint)
+    }
+}
+
+struct AppToast: Identifiable {
+    let id = UUID()
+    let message: String
+    let actionTitle: String?
+    let action: (() -> Void)?
+}
+
+@MainActor
+final class AppFeedbackCenter: ObservableObject {
+    @Published private(set) var toast: AppToast?
+    private var dismissalTask: Task<Void, Never>?
+
+    func show(message: String) {
+        present(AppToast(message: message, actionTitle: nil, action: nil))
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+
+    func showUndo(message: String, action: @escaping () -> Void) {
+        present(
+            AppToast(
+                message: message,
+                actionTitle: NSLocalizedString("button.undo", comment: ""),
+                action: action
+            )
+        )
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+
+    func showError(message: String) {
+        present(AppToast(message: message, actionTitle: nil, action: nil))
+        UINotificationFeedbackGenerator().notificationOccurred(.error)
+    }
+
+    func dismiss() {
+        dismissalTask?.cancel()
+        dismissalTask = nil
+        toast = nil
+    }
+
+    func performAction() {
+        let action = toast?.action
+        dismiss()
+        action?()
+    }
+
+    private func present(_ toast: AppToast) {
+        dismissalTask?.cancel()
+        self.toast = toast
+        let announcement = toast.action == nil
+            ? toast.message
+            : "\(toast.message) \(NSLocalizedString("feedback.undoAvailable", comment: ""))"
+        UIAccessibility.post(notification: .announcement, argument: announcement)
+
+        if toast.action != nil, UIAccessibility.isVoiceOverRunning {
+            dismissalTask = nil
+            return
+        }
+        dismissalTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(4))
+            guard !Task.isCancelled else { return }
+            self?.toast = nil
+        }
+    }
+}
+
+private struct AppToastOverlayModifier: ViewModifier {
+    @EnvironmentObject private var feedbackCenter: AppFeedbackCenter
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .bottom) {
+                if let toast = feedbackCenter.toast {
+                    HStack(spacing: AppSpacing.medium) {
+                        Text(toast.message)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(.primary)
+                        Spacer(minLength: AppSpacing.small)
+                        if let actionTitle = toast.actionTitle {
+                            Button(actionTitle) {
+                                feedbackCenter.performAction()
+                            }
+                            .font(.subheadline.bold())
+                        }
+                        Button {
+                            feedbackCenter.dismiss()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.caption.bold())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("button.dismiss")
+                    }
+                    .padding(.horizontal, AppSpacing.large)
+                    .padding(.vertical, AppSpacing.medium)
+                    .background(.regularMaterial, in: Capsule())
+                    .overlay {
+                        Capsule()
+                            .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                    }
+                    .shadow(color: .black.opacity(0.18), radius: 12, y: 5)
+                    .padding(.horizontal, AppSpacing.large)
+                    .padding(.bottom, 76)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .accessibilityElement(children: .contain)
+                }
+            }
+            .animation(.snappy, value: feedbackCenter.toast?.id)
     }
 }
 

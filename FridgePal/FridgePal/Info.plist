@@ -23,7 +23,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>FridgePal uses the camera to take photos of your food items.</string>
+	<string>FridgePal uses the camera to take food photos and scan package labels or barcodes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>FridgePal accesses your photo library to select food photos.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

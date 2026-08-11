@@ -24,6 +24,10 @@ final class NotificationService {
         }
     }
 
+    func authorizationStatus() async -> UNAuthorizationStatus {
+        await center.notificationSettings().authorizationStatus
+    }
+
     // MARK: - Schedule
 
     /// Rebuilds the complete pending reminder schedule from the active inventory.

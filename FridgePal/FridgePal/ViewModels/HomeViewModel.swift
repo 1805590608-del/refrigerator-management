@@ -4,18 +4,27 @@ import Combine
 
 struct HomeAttentionItems {
     let expired: [FoodItem]
+    let useToday: [FoodItem]
     let useSoon: [FoodItem]
 
     init(items: [FoodItem]) {
         var expired: [FoodItem] = []
+        var useToday: [FoodItem] = []
         var useSoon: [FoodItem] = []
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
 
         for item in items where item.isActive {
             switch item.expirationState {
             case .expired:
                 expired.append(item)
             case .expiringSoon:
-                useSoon.append(item)
+                if let expirationDate = item.expirationDate,
+                   calendar.startOfDay(for: expirationDate) == today {
+                    useToday.append(item)
+                } else {
+                    useSoon.append(item)
+                }
             case .fresh, .noDate:
                 break
             }
@@ -24,13 +33,18 @@ struct HomeAttentionItems {
         self.expired = expired.sorted {
             ($0.expirationDate ?? .distantPast) > ($1.expirationDate ?? .distantPast)
         }
+        self.useToday = useToday.sorted { $0.name < $1.name }
         self.useSoon = useSoon.sorted {
             ($0.expirationDate ?? .distantFuture) < ($1.expirationDate ?? .distantFuture)
         }
     }
 
     var isEmpty: Bool {
-        expired.isEmpty && useSoon.isEmpty
+        expired.isEmpty && useToday.isEmpty && useSoon.isEmpty
+    }
+
+    var expiringSoonCount: Int {
+        useToday.count + useSoon.count
     }
 }
 
@@ -38,6 +52,7 @@ struct HomeAttentionItems {
 final class HomeViewModel: ObservableObject {
     @Published var activeItems: [FoodItem] = []
     @Published var searchText: String = ""
+    @Published var errorMessage: String?
 
     private let repository: FoodRepositoryProtocol
 
@@ -48,8 +63,9 @@ final class HomeViewModel: ObservableObject {
     func load() {
         do {
             activeItems = try repository.fetchActive()
+            errorMessage = nil
         } catch {
-            activeItems = []
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -59,7 +75,7 @@ final class HomeViewModel: ObservableObject {
         HomeAttentionItems(items: activeItems)
     }
 
-    var expiringSoonCount: Int { attentionItems.useSoon.count }
+    var expiringSoonCount: Int { attentionItems.expiringSoonCount }
 
     var expiredCount: Int { attentionItems.expired.count }
 

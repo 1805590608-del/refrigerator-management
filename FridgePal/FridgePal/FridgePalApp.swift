@@ -1,16 +1,14 @@
 import SwiftUI
 import SwiftData
-import UserNotifications
 
 @main
 struct FridgePalApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var cloudKitService = CloudKitService.shared
+    @StateObject private var feedbackCenter = AppFeedbackCenter()
     @AppStorage("preferGridView") var preferGridView: Bool = false
     @AppStorage(AppLanguageStorage.key) private var appLanguageRaw: String = AppLanguage.system.rawValue
     @AppStorage("colorScheme") private var colorSchemeRaw: String = "system"
-    @State private var didStartNotificationSetup = false
-    @State private var didFinishNotificationSetup = false
 
     init() {
         AppLanguageController.apply(UserDefaults.standard.string(forKey: AppLanguageStorage.key) ?? AppLanguage.system.rawValue)
@@ -21,14 +19,12 @@ struct FridgePalApp: App {
             ContentView()
                 .modelContainer(PersistenceController.shared.container)
                 .environmentObject(cloudKitService)
+                .environmentObject(feedbackCenter)
                 .environment(\.locale, currentLanguage.locale)
                 .preferredColorScheme(preferredColorScheme)
                 .id(appLanguageRaw)
                 .onAppear {
                     AppLanguageController.apply(appLanguageRaw)
-                    guard !didStartNotificationSetup else { return }
-                    didStartNotificationSetup = true
-                    requestNotificationPermission()
                 }
                 .onChange(of: appLanguageRaw) { _, newValue in
                     AppLanguageController.apply(newValue)
@@ -38,7 +34,7 @@ struct FridgePalApp: App {
         .onChange(of: scenePhase) { _, newPhase in
             // Reminders are day-based, so rebuild the schedule whenever the app
             // comes to the foreground to keep digests aligned with today.
-            if newPhase == .active && didFinishNotificationSetup {
+            if newPhase == .active {
                 refreshReminders()
             }
         }
@@ -56,14 +52,6 @@ struct FridgePalApp: App {
             .dark
         default:
             nil
-        }
-    }
-
-    private func requestNotificationPermission() {
-        Task { @MainActor in
-            let granted = await NotificationService.shared.requestAuthorization()
-            if granted { refreshReminders() }
-            didFinishNotificationSetup = true
         }
     }
 

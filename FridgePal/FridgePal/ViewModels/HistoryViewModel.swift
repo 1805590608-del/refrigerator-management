@@ -5,6 +5,7 @@ import SwiftData
 final class HistoryViewModel: ObservableObject {
     @Published var records: [HistoryRecord] = []
     @Published var selectedTimeRange: TimeRange = .month
+    @Published var errorMessage: String?
 
     private let repository: FoodRepositoryProtocol
 
@@ -34,14 +35,19 @@ final class HistoryViewModel: ObservableObject {
     func load() {
         do {
             records = try repository.fetchHistory()
+            errorMessage = nil
         } catch {
-            records = []
+            errorMessage = error.localizedDescription
         }
     }
 
     var filteredRecords: [HistoryRecord] {
         guard let days = selectedTimeRange.days else { return records }
-        let cutoff = Calendar.current.date(byAdding: .day, value: -days, to: Date())!
+        guard let cutoff = Calendar.current.date(
+            byAdding: .day,
+            value: -days,
+            to: Date()
+        ) else { return records }
         return records.filter { $0.archivedAt >= cutoff }
     }
 
@@ -66,12 +72,20 @@ final class HistoryViewModel: ObservableObject {
     }
 
     func delete(_ record: HistoryRecord) {
-        try? repository.deleteHistory(record)
-        load()
+        do {
+            try repository.deleteHistory(record)
+            load()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func clearAll() {
-        try? repository.clearAllHistory()
-        load()
+        do {
+            try repository.clearAllHistory()
+            load()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }

@@ -274,3 +274,53 @@
 
 /* 无障碍 */
 "accessibility.toggleSelection" = "轻点两下以选择或取消选择此食物";
+"accessibility.metricCountFormat" = "%@，%d 件食物";
+"accessibility.openFilteredList" = "打开符合条件的库存列表";
+"accessibility.historyActionsFormat" = "「%@」的操作菜单";
+
+/* 新手引导 */
+"onboarding.emptyTitle" = "更轻松地用完食物";
+"onboarding.emptySubtitle" = "记录现有食物、接收到期提醒，并随时生成购物清单。";
+"onboarding.addFirstItem" = "添加第一件食物";
+
+/* 提醒权限 */
+"reminder.permissionTitle" = "接收到期提醒？";
+"reminder.permissionMessage" = "FridgePal 可以在食物到期前提醒你。你可以随时在设置中更改。";
+"reminder.enable" = "启用提醒";
+"reminder.notNow" = "暂不";
+
+/* 购物闭环 */
+"shopping.addToFridge" = "加入冰箱";
+"shopping.clearCompleted" = "清除";
+"shopping.completedFooter" = "把已购食物加入冰箱，即可继续跟踪到期日期。";
+"shopping.movedToFridgeFormat" = "已将「%@」移入冰箱。";
+
+/* 筛选与操作反馈 */
+"button.dismiss" = "关闭";
+"button.undo" = "撤销";
+"filter.resultCountFormat" = "%d 个结果";
+"filter.searchFormat" = "搜索：%@";
+"filter.removeHint" = "轻点两下移除此筛选";
+"feedback.deletedFormat" = "已删除「%@」。";
+"feedback.archivedFormat" = "已将「%@」标记为“%@”。";
+"feedback.clearedCompleted" = "已清除已购项目。";
+"feedback.undoAvailable" = "可以撤销此操作。";
+
+/* 快捷录入 */
+"expiration.quickDaysFormat" = "%d 天";
+"template.frequentFoods" = "常用食物";
+"template.frequentFoodsFooter" = "轻点即可沿用常用信息，并自动更新日期。";
+"template.useCountFormat" = "已使用 %d 次";
+"home.useToday" = "今天优先食用";
+"home.useTodaySubtitle" = "这些食物今天到期，请优先安排到下一餐。";
+
+/* 扫描 */
+"field.barcode" = "条形码";
+"scanner.scanFood" = "扫描包装或条形码";
+"scanner.scanFoodHint" = "使用相机自动填写食物信息";
+"scanner.title" = "扫描食物";
+"scanner.aimHint" = "将镜头对准条形码或包装文字";
+"scanner.textFound" = "已识别包装文字";
+"scanner.barcodeFoundFormat" = "已识别条形码 %@";
+"scanner.useResult" = "使用扫描结果";
+"scanner.unavailable" = "食物扫描需要支持的 iPhone 或 iPad 相机，Simulator 无法使用此功能。";

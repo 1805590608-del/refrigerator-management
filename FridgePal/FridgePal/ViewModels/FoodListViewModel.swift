@@ -141,6 +141,7 @@ final class FoodListViewModel: ObservableObject {
     @Published var selectedCategory: FoodCategory? = nil
     @Published var selectedLocation: StorageLocation? = nil
     @Published var isGridView: Bool = false
+    @Published var errorMessage: String?
 
     private let repository: FoodRepositoryProtocol
     private let notificationService = NotificationService.shared
@@ -152,8 +153,9 @@ final class FoodListViewModel: ObservableObject {
     func load() {
         do {
             items = try repository.fetchActive()
+            errorMessage = nil
         } catch {
-            items = []
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -203,20 +205,32 @@ final class FoodListViewModel: ObservableObject {
     }
 
     func delete(_ item: FoodItem, settings: ReminderSettings = .current()) {
-        try? repository.delete(item)
-        load()
-        notificationService.refreshSchedule(for: items, settings: settings)
+        do {
+            try repository.delete(item)
+            load()
+            notificationService.refreshSchedule(for: items, settings: settings)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func markEaten(_ item: FoodItem, settings: ReminderSettings = .current()) {
-        try? repository.archiveItem(item, status: .eaten)
-        load()
-        notificationService.refreshSchedule(for: items, settings: settings)
+        do {
+            try repository.archiveItem(item, status: .eaten)
+            load()
+            notificationService.refreshSchedule(for: items, settings: settings)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     func markDiscarded(_ item: FoodItem, settings: ReminderSettings = .current()) {
-        try? repository.archiveItem(item, status: .discarded)
-        load()
-        notificationService.refreshSchedule(for: items, settings: settings)
+        do {
+            try repository.archiveItem(item, status: .discarded)
+            load()
+            notificationService.refreshSchedule(for: items, settings: settings)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 }

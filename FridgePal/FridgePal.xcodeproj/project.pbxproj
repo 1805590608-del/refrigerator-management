@@ -34,6 +34,7 @@
 		D228E955E7E84CEB886E0589 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F846B7DBA22B4C6E97FB3047 /* SettingsView.swift */; };
 		4A5F3426E31E4AB5B1393F40 /* UIStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B7E9414EF544D6A37EFA38 /* UIStyle.swift */; };
 		3C5B6B2123434CD3834CB526 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 10257CD36306467D9C84467F /* Localizable.strings */; };
+		D10000000000000000000001 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D40000000000000000000001 /* InfoPlist.strings */; };
 		C9EE38200BC54216AFEE4C0B /* FridgePalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B16D1AEC16497780306B24 /* FridgePalTests.swift */; };
 		7B762B2352664191A9A149EF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C041A4C013A940EDBD6B50C8 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -67,6 +68,8 @@
 		59B7E9414EF544D6A37EFA38 /* UIStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/UIStyle.swift; sourceTree = "<group>"; };
 		A812125355E0464E9D0D40F5 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		999101407B724A598560A98A /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		D20000000000000000000001 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		D30000000000000000000001 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 
 		B0B16D1AEC16497780306B24 /* FridgePalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FridgePalTests/FridgePalTests.swift; sourceTree = "<group>"; };
 		C041A4C013A940EDBD6B50C8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -126,6 +129,7 @@
 			isa = PBXGroup;
 			children = (
 				10257CD36306467D9C84467F /* Localizable.strings */,
+				D40000000000000000000001 /* InfoPlist.strings */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -223,6 +227,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3C5B6B2123434CD3834CB526 /* Localizable.strings in Resources */,
+				D10000000000000000000001 /* InfoPlist.strings in Resources */,
 				7B762B2352664191A9A149EF /* Assets.xcassets in Resources */,
 
 			);
@@ -238,6 +243,15 @@
 				999101407B724A598560A98A /* zh-Hans */,
 			);
 			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		D40000000000000000000001 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D20000000000000000000001 /* en */,
+				D30000000000000000000001 /* zh-Hans */,
+			);
+			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -308,7 +322,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FridgePal/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FridgePal;
-				INFOPLIST_KEY_NSCameraUsageDescription = "FridgePal uses the camera to take photos of your food items.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "FridgePal uses the camera to take food photos and scan package labels or barcodes.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "FridgePal accesses your photo library to add food photos.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "FridgePal saves photos to your photo library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -340,7 +354,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FridgePal/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FridgePal;
-				INFOPLIST_KEY_NSCameraUsageDescription = "FridgePal uses the camera to take photos of your food items.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "FridgePal uses the camera to take food photos and scan package labels or barcodes.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "FridgePal accesses your photo library to add food photos.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "FridgePal saves photos to your photo library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

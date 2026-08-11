@@ -31,6 +31,21 @@ enum FoodCategory: String, Codable, CaseIterable, Identifiable {
         case .other:     return "📦"
         }
     }
+
+    var defaultShelfLifeDays: Int {
+        switch self {
+        case .meat, .cooked:
+            3
+        case .vegetable, .fruit, .dairy:
+            7
+        case .beverage:
+            14
+        case .condiment:
+            30
+        case .other:
+            7
+        }
+    }
 }
 
 enum StorageLocation: String, Codable, CaseIterable, Identifiable {
@@ -66,6 +81,47 @@ enum FoodStatus: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+enum FoodUnit: String, CaseIterable, Identifiable {
+    case item
+    case box
+    case bag
+    case bottle
+    case g
+    case kg
+    case oz
+    case lb
+    case L
+    case mL
+    case pack
+    case can
+    case piece
+
+    var id: String { rawValue }
+
+    var localizedName: String {
+        NSLocalizedString("unit.\(rawValue)", comment: rawValue)
+    }
+
+    var quantityStep: Double {
+        switch self {
+        case .kg, .oz, .lb, .L:
+            0.1
+        default:
+            1
+        }
+    }
+
+    var minimumQuantity: Double {
+        quantityStep
+    }
+}
+
+extension String {
+    var localizedFoodUnit: String {
+        FoodUnit(rawValue: self)?.localizedName ?? self
+    }
+}
+
 // MARK: - FoodItem Model
 
 @Model
@@ -76,6 +132,7 @@ final class FoodItem {
     var storageLocation: String = StorageLocation.fridge.rawValue
     var quantity: Double = 1
     var unit: String = "item"
+    var barcode: String = ""
     var purchaseDate: Date = Date()
     var expirationDate: Date?
     @Attribute(.externalStorage) var photoData: Data?
@@ -91,6 +148,7 @@ final class FoodItem {
         storageLocation: StorageLocation = .fridge,
         quantity: Double = 1,
         unit: String = "item",
+        barcode: String = "",
         purchaseDate: Date = Date(),
         expirationDate: Date? = nil,
         photoData: Data? = nil,
@@ -105,6 +163,7 @@ final class FoodItem {
         self.storageLocation = storageLocation.rawValue
         self.quantity = quantity
         self.unit = unit
+        self.barcode = barcode
         self.purchaseDate = purchaseDate
         self.expirationDate = expirationDate
         self.photoData = photoData
@@ -148,6 +207,59 @@ final class FoodItem {
     }
 
     var isActive: Bool { statusEnum == .active }
+}
+
+struct FoodItemSnapshot {
+    let id: UUID
+    let name: String
+    let category: FoodCategory
+    let storageLocation: StorageLocation
+    let quantity: Double
+    let unit: String
+    let barcode: String
+    let purchaseDate: Date
+    let expirationDate: Date?
+    let photoData: Data?
+    let notes: String
+    let status: FoodStatus
+    let createdAt: Date
+    let updatedAt: Date
+
+    init(item: FoodItem) {
+        id = item.id
+        name = item.name
+        category = item.categoryEnum
+        storageLocation = item.storageLocationEnum
+        quantity = item.quantity
+        unit = item.unit
+        barcode = item.barcode
+        purchaseDate = item.purchaseDate
+        expirationDate = item.expirationDate
+        photoData = item.photoData
+        notes = item.notes
+        status = item.statusEnum
+        createdAt = item.createdAt
+        updatedAt = item.updatedAt
+    }
+
+    func makeItem() -> FoodItem {
+        FoodItem(
+            id: id,
+            name: name,
+            category: category,
+            storageLocation: storageLocation,
+            quantity: quantity,
+            unit: unit,
+            barcode: barcode,
+            purchaseDate: purchaseDate,
+            expirationDate: expirationDate,
+            photoData: photoData,
+            notes: notes,
+            status: status,
+            createdAt: createdAt,
+            updatedAt: updatedAt
+        )
+    }
 }
 
 // MARK: - ExpirationState

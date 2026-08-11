@@ -273,3 +273,53 @@
 
 /* Accessibility */
 "accessibility.toggleSelection" = "Double tap to select or deselect this food";
+"accessibility.metricCountFormat" = "%@, %d items";
+"accessibility.openFilteredList" = "Opens the matching inventory items";
+"accessibility.historyActionsFormat" = "Actions for %@";
+
+/* Onboarding */
+"onboarding.emptyTitle" = "Make food easier to use up";
+"onboarding.emptySubtitle" = "Add what you have, get expiration reminders, and build a shopping list as you go.";
+"onboarding.addFirstItem" = "Add Your First Food";
+
+/* Reminders */
+"reminder.permissionTitle" = "Get expiration reminders?";
+"reminder.permissionMessage" = "FridgePal can remind you before dated food expires. You can change this anytime in Settings.";
+"reminder.enable" = "Enable Reminders";
+"reminder.notNow" = "Not Now";
+
+/* Shopping workflow */
+"shopping.addToFridge" = "Add to Fridge";
+"shopping.clearCompleted" = "Clear";
+"shopping.completedFooter" = "Add purchased items to your fridge to keep their expiration dates on track.";
+"shopping.movedToFridgeFormat" = "%@ moved to your fridge.";
+
+/* Filters and feedback */
+"button.dismiss" = "Dismiss";
+"button.undo" = "Undo";
+"filter.resultCountFormat" = "%d results";
+"filter.searchFormat" = "Search: %@";
+"filter.removeHint" = "Double tap to remove this filter";
+"feedback.deletedFormat" = "%@ deleted.";
+"feedback.archivedFormat" = "%@ marked as %@.";
+"feedback.clearedCompleted" = "Purchased items cleared.";
+"feedback.undoAvailable" = "Undo is available.";
+
+/* Faster food entry */
+"expiration.quickDaysFormat" = "%d days";
+"template.frequentFoods" = "Frequent Foods";
+"template.frequentFoodsFooter" = "Tap a food to reuse its usual details with fresh dates.";
+"template.useCountFormat" = "Used %d times";
+"home.useToday" = "Use Today";
+"home.useTodaySubtitle" = "These foods expire today—plan them into your next meal.";
+
+/* Scanner */
+"field.barcode" = "Barcode";
+"scanner.scanFood" = "Scan Label or Barcode";
+"scanner.scanFoodHint" = "Uses the camera to fill in food details";
+"scanner.title" = "Scan Food";
+"scanner.aimHint" = "Aim at a barcode or package text";
+"scanner.textFound" = "Package text detected";
+"scanner.barcodeFoundFormat" = "Barcode %@ detected";
+"scanner.useResult" = "Use Scan";
+"scanner.unavailable" = "Food scanning requires a supported iPhone or iPad camera and is not available in Simulator.";

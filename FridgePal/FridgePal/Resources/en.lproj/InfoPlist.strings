@@ -1,0 +1,3 @@
+"NSCameraUsageDescription" = "FridgePal uses the camera to take food photos and scan package labels or barcodes.";
+"NSPhotoLibraryUsageDescription" = "FridgePal accesses your photo library to add food photos.";
+"NSPhotoLibraryAddUsageDescription" = "FridgePal saves food photos to your photo library.";

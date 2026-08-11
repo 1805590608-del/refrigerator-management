@@ -1,6 +1,13 @@
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
+    @Query private var shoppingItems: [ShoppingItem]
+
+    private var pendingShoppingCount: Int {
+        shoppingItems.filter { !$0.isCompleted }.count
+    }
+
     var body: some View {
         TabView {
             HomeView()
@@ -17,6 +24,7 @@ struct ContentView: View {
                 .tabItem {
                     Label("tab.shopping", systemImage: "cart.fill")
                 }
+                .badge(pendingShoppingCount)
 
             HistoryView()
                 .tabItem {
@@ -30,5 +38,6 @@ struct ContentView: View {
         }
         .tint(.accentColor)
         .toolbarBackground(.visible, for: .tabBar)
+        .appToastOverlay()
     }
 }

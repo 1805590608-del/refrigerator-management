@@ -3,6 +3,7 @@ import SwiftData
 
 struct HistoryView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var feedbackCenter: AppFeedbackCenter
     @State private var records: [HistoryRecord] = []
     @State private var selectedRange: HistoryViewModel.TimeRange = .month
     @State private var recordToRepeat: HistoryRecord?
@@ -80,17 +81,6 @@ struct HistoryView: View {
                         message: Text("alert.clearHistoryMessage"),
                         primaryButton: .destructive(Text("button.clearAll"), action: clearAll),
                         secondaryButton: .cancel(Text("button.cancel"))
-                    )
-                case .shoppingAdded(let name):
-                    Alert(
-                        title: Text("shopping.addedTitle"),
-                        message: Text(
-                            String(
-                                format: NSLocalizedString("shopping.addedFormat", comment: ""),
-                                name
-                            )
-                        ),
-                        dismissButton: .default(Text("button.ok"))
                     )
                 case .error(let message):
                     Alert(
@@ -198,16 +188,35 @@ struct HistoryView: View {
     private func addToShoppingList(_ record: HistoryRecord) {
         do {
             try ShoppingRepository(context: modelContext).add(from: record)
-            activeAlert = .shoppingAdded(record.foodName)
+            feedbackCenter.show(
+                message: String(
+                    format: NSLocalizedString("shopping.addedFormat", comment: ""),
+                    record.foodName
+                )
+            )
         } catch {
             activeAlert = .error(error.localizedDescription)
         }
     }
 
     private func deleteRecord(_ record: HistoryRecord) {
+        let snapshot = HistoryRecordSnapshot(record: record)
         do {
             try repo.deleteHistory(record)
             loadRecords()
+            feedbackCenter.showUndo(
+                message: String(
+                    format: NSLocalizedString("feedback.deletedFormat", comment: ""),
+                    snapshot.foodName
+                )
+            ) {
+                do {
+                    try FoodRepository(context: modelContext).restoreHistory(snapshot)
+                    loadRecords()
+                } catch {
+                    activeAlert = .error(error.localizedDescription)
+                }
+            }
         } catch {
             activeAlert = .error(error.localizedDescription)
         }
@@ -225,15 +234,12 @@ struct HistoryView: View {
 
 private enum HistoryAlert: Identifiable {
     case clearConfirmation
-    case shoppingAdded(String)
     case error(String)
 
     var id: String {
         switch self {
         case .clearConfirmation:
             "clearConfirmation"
-        case .shoppingAdded(let name):
-            "shoppingAdded:\(name)"
         case .error(let message):
             "error:\(message)"
         }
@@ -271,29 +277,23 @@ struct HistoryRowView: View {
                     tint: statusColor
                 )
 
-                Button(action: shoppingAction) {
-                    Label("button.addToShoppingList", systemImage: "cart.badge.plus")
-                        .font(.caption.weight(.semibold))
+                Menu {
+                    Button(action: shoppingAction) {
+                        Label("button.addToShoppingList", systemImage: "cart.badge.plus")
+                    }
+                    Button(action: repeatAction) {
+                        Label("button.addAgain", systemImage: "plus.circle")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(.title3)
+                        .frame(width: 36, height: 36)
                 }
                 .buttonStyle(.borderless)
                 .accessibilityLabel(
                     Text(
                         String(
-                            format: NSLocalizedString("accessibility.addToShoppingFormat", comment: ""),
-                            record.foodName
-                        )
-                    )
-                )
-
-                Button(action: repeatAction) {
-                    Label("button.addAgain", systemImage: "plus.circle")
-                        .font(.caption.weight(.semibold))
-                }
-                .buttonStyle(.borderless)
-                .accessibilityLabel(
-                    Text(
-                        String(
-                            format: NSLocalizedString("accessibility.addAgainFormat", comment: ""),
+                            format: NSLocalizedString("accessibility.historyActionsFormat", comment: ""),
                             record.foodName
                         )
                     )
@@ -311,4 +311,5 @@ struct HistoryRowView: View {
 #Preview {
     HistoryView()
         .modelContainer(PersistenceController.preview.container)
+        .environmentObject(AppFeedbackCenter())
 }

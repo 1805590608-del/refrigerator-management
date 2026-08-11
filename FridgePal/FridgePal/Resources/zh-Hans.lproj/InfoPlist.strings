@@ -1,0 +1,3 @@
+"NSCameraUsageDescription" = "FridgePal 使用相机拍摄食物照片，并扫描包装文字或条形码。";
+"NSPhotoLibraryUsageDescription" = "FridgePal 访问你的照片图库，以添加食物照片。";
+"NSPhotoLibraryAddUsageDescription" = "FridgePal 将食物照片保存到你的照片图库。";

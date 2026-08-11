@@ -73,3 +73,41 @@ final class ShoppingItem {
         updatedAt = date
     }
 }
+
+struct ShoppingItemSnapshot {
+    let id: UUID
+    let name: String
+    let category: FoodCategory
+    let preferredQuantity: Double
+    let unit: String
+    let isCompleted: Bool
+    let createdAt: Date
+    let completedAt: Date?
+    let updatedAt: Date
+
+    init(item: ShoppingItem) {
+        id = item.id
+        name = item.name
+        category = item.categoryEnum
+        preferredQuantity = item.preferredQuantity
+        unit = item.unit
+        isCompleted = item.isCompleted
+        createdAt = item.createdAt
+        completedAt = item.completedAt
+        updatedAt = item.updatedAt
+    }
+
+    func makeItem() -> ShoppingItem {
+        ShoppingItem(
+            id: id,
+            name: name,
+            category: category,
+            preferredQuantity: preferredQuantity,
+            unit: unit,
+            isCompleted: isCompleted,
+            createdAt: createdAt,
+            completedAt: completedAt,
+            updatedAt: updatedAt
+        )
+    }
+}

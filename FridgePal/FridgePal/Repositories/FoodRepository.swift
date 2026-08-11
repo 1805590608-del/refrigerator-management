@@ -56,9 +56,29 @@ final class FoodRepository: FoodRepositoryProtocol {
     }
 
     func archiveItem(_ item: FoodItem, status: FoodStatus) throws {
+        _ = try archiveItemForUndo(item, status: status)
+    }
+
+    @discardableResult
+    func archiveItemForUndo(_ item: FoodItem, status: FoodStatus) throws -> HistoryRecord {
         let record = HistoryRecord(from: item, finalStatus: status)
         context.insert(record)
         context.delete(item)
+        try context.save()
+        return record
+    }
+
+    func restore(_ snapshot: FoodItemSnapshot) throws {
+        context.insert(snapshot.makeItem())
+        try context.save()
+    }
+
+    func restoreArchivedItem(
+        _ snapshot: FoodItemSnapshot,
+        removing record: HistoryRecord
+    ) throws {
+        context.insert(snapshot.makeItem())
+        context.delete(record)
         try context.save()
     }
 
@@ -80,6 +100,11 @@ final class FoodRepository: FoodRepositoryProtocol {
 
     func deleteHistory(_ record: HistoryRecord) throws {
         context.delete(record)
+        try context.save()
+    }
+
+    func restoreHistory(_ snapshot: HistoryRecordSnapshot) throws {
+        context.insert(snapshot.makeRecord())
         try context.save()
     }
 

@@ -14,6 +14,7 @@ protocol ShoppingRepositoryProtocol {
     @discardableResult func add(from record: HistoryRecord) throws -> ShoppingItem
     func setCompleted(_ item: ShoppingItem, isCompleted: Bool) throws
     func delete(_ item: ShoppingItem) throws
+    func clearCompleted() throws
 }
 
 final class ShoppingRepository: ShoppingRepositoryProtocol {
@@ -37,40 +38,53 @@ final class ShoppingRepository: ShoppingRepositoryProtocol {
         preferredQuantity: Double,
         unit: String
     ) throws -> ShoppingItem {
-        let shoppingItem = ShoppingItem(
+        var existingItems = try fetchAll()
+        let shoppingItem = addOrMerge(
             name: name,
             category: category,
             preferredQuantity: preferredQuantity,
-            unit: unit
+            unit: unit,
+            existingItems: &existingItems
         )
-        context.insert(shoppingItem)
         try context.save()
         return shoppingItem
     }
 
     @discardableResult
     func add(from item: FoodItem) throws -> ShoppingItem {
-        let shoppingItem = ShoppingItem(from: item)
-        context.insert(shoppingItem)
-        try context.save()
-        return shoppingItem
+        try add(
+            name: item.name,
+            category: item.categoryEnum,
+            preferredQuantity: item.quantity,
+            unit: item.unit
+        )
     }
 
     @discardableResult
     func add(from items: [FoodItem]) throws -> [ShoppingItem] {
         guard !items.isEmpty else { return [] }
-        let shoppingItems = items.map { ShoppingItem(from: $0) }
-        for shoppingItem in shoppingItems { context.insert(shoppingItem) }
+        var existingItems = try fetchAll()
+        let shoppingItems = items.map {
+            addOrMerge(
+                name: $0.name,
+                category: $0.categoryEnum,
+                preferredQuantity: $0.quantity,
+                unit: $0.unit,
+                existingItems: &existingItems
+            )
+        }
         try context.save()
         return shoppingItems
     }
 
     @discardableResult
     func add(from record: HistoryRecord) throws -> ShoppingItem {
-        let shoppingItem = ShoppingItem(from: record)
-        context.insert(shoppingItem)
-        try context.save()
-        return shoppingItem
+        try add(
+            name: record.foodName,
+            category: record.categoryEnum,
+            preferredQuantity: record.quantity,
+            unit: record.unit
+        )
     }
 
     func setCompleted(_ item: ShoppingItem, isCompleted: Bool) throws {
@@ -81,5 +95,59 @@ final class ShoppingRepository: ShoppingRepositoryProtocol {
     func delete(_ item: ShoppingItem) throws {
         context.delete(item)
         try context.save()
+    }
+
+    func restore(_ snapshots: [ShoppingItemSnapshot]) throws {
+        for snapshot in snapshots {
+            context.insert(snapshot.makeItem())
+        }
+        try context.save()
+    }
+
+    func clearCompleted() throws {
+        let completedItems = try fetchAll().filter(\.isCompleted)
+        for item in completedItems {
+            context.delete(item)
+        }
+        try context.save()
+    }
+
+    private func addOrMerge(
+        name: String,
+        category: FoodCategory,
+        preferredQuantity: Double,
+        unit: String,
+        existingItems: inout [ShoppingItem]
+    ) -> ShoppingItem {
+        let normalizedName = name.trimmingCharacters(in: .whitespacesAndNewlines).folding(
+            options: [.caseInsensitive, .diacriticInsensitive],
+            locale: .current
+        )
+
+        if let existing = existingItems.first(where: {
+            !$0.isCompleted &&
+            $0.unit == unit &&
+            $0.name.trimmingCharacters(in: .whitespacesAndNewlines).folding(
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: .current
+            ) == normalizedName
+        }) {
+            existing.preferredQuantity += preferredQuantity
+            if existing.categoryEnum == .other {
+                existing.categoryEnum = category
+            }
+            existing.updatedAt = Date()
+            return existing
+        }
+
+        let shoppingItem = ShoppingItem(
+            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+            category: category,
+            preferredQuantity: preferredQuantity,
+            unit: unit
+        )
+        context.insert(shoppingItem)
+        existingItems.append(shoppingItem)
+        return shoppingItem
     }
 }

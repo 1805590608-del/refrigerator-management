@@ -3,10 +3,11 @@ import SwiftData
 
 struct FoodListView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var feedbackCenter: AppFeedbackCenter
     @AppStorage("preferGridView") private var preferGridView: Bool = false
+    @AppStorage("foodSortOption") private var sortOptionRawValue = SortOption.expirationDate.rawValue
     @State private var items: [FoodItem] = []
     @State private var searchText = ""
-    @State private var sortOption: SortOption = .expirationDate
     @State private var filterOption: FilterOption = .all
     @State private var selectedCategory: FoodCategory? = nil
     @State private var selectedLocation: StorageLocation? = nil
@@ -16,11 +17,13 @@ struct FoodListView: View {
     @State private var isSelecting = false
     @State private var selection = BulkSelection()
     @State private var pendingBulkAction: BulkAction? = nil
-    @State private var bulkResultMessage: String? = nil
     @State private var operationError: String?
 
     private var repository: FoodRepository { FoodRepository(context: modelContext) }
     private var shoppingRepository: ShoppingRepository { ShoppingRepository(context: modelContext) }
+    private var sortOption: SortOption {
+        SortOption(rawValue: sortOptionRawValue) ?? .expirationDate
+    }
 
     private var displayedItems: [FoodItem] {
         var result = items
@@ -60,16 +63,22 @@ struct FoodListView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if items.isEmpty {
-                    EmptyStateView(message: "empty.noItems", icon: "refrigerator")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if displayedItems.isEmpty {
-                    filteredEmptyState
-                } else if preferGridView && !isSelecting {
-                    gridView
-                } else {
-                    listView
+            VStack(spacing: 0) {
+                if !items.isEmpty && !isSelecting {
+                    filterSummaryBar
+                }
+
+                Group {
+                    if items.isEmpty {
+                        EmptyStateView(message: "empty.noItems", icon: "refrigerator")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if displayedItems.isEmpty {
+                        filteredEmptyState
+                    } else if preferGridView && !isSelecting {
+                        gridView
+                    } else {
+                        listView
+                    }
                 }
             }
             .background(Color(uiColor: .systemGroupedBackground))
@@ -159,17 +168,6 @@ struct FoodListView: View {
                 Button("button.cancel", role: .cancel) { pendingBulkAction = nil }
             } message: { action in
                 Text(action.confirmationMessage(count: selection.count))
-            }
-            .alert(
-                "bulk.doneTitle",
-                isPresented: Binding(
-                    get: { bulkResultMessage != nil },
-                    set: { if !$0 { bulkResultMessage = nil } }
-                )
-            ) {
-                Button("button.ok") { bulkResultMessage = nil }
-            } message: {
-                Text(bulkResultMessage ?? "")
             }
             .alert("alert.errorTitle", isPresented: Binding(
                 get: { operationError != nil },
@@ -304,13 +302,65 @@ struct FoodListView: View {
 
     // MARK: Filter Menu
 
+    private var filterSummaryBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: AppSpacing.small) {
+                Text(
+                    String(
+                        format: NSLocalizedString("filter.resultCountFormat", comment: ""),
+                        displayedItems.count
+                    )
+                )
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .padding(.trailing, AppSpacing.xSmall)
+
+                if !searchText.isEmpty {
+                    ActiveFilterChip(
+                        title: String(
+                            format: NSLocalizedString("filter.searchFormat", comment: ""),
+                            searchText
+                        ),
+                        onRemove: { searchText = "" }
+                    )
+                }
+                if filterOption != .all {
+                    ActiveFilterChip(
+                        title: filterOption.localizedName,
+                        onRemove: { filterOption = .all }
+                    )
+                }
+                if let selectedCategory {
+                    ActiveFilterChip(
+                        title: selectedCategory.localizedName,
+                        onRemove: { self.selectedCategory = nil }
+                    )
+                }
+                if let selectedLocation {
+                    ActiveFilterChip(
+                        title: selectedLocation.localizedName,
+                        onRemove: { self.selectedLocation = nil }
+                    )
+                }
+                if hasActiveFilters {
+                    Button("button.clearFilters", action: clearFilters)
+                        .font(.footnote.weight(.semibold))
+                }
+            }
+            .padding(.horizontal, AppSpacing.large)
+            .padding(.vertical, AppSpacing.small)
+        }
+        .background(.bar)
+        .accessibilityElement(children: .contain)
+    }
+
     private var filterMenu: some View {
         Menu {
             // Sort
             Menu {
                 ForEach(SortOption.allCases) { opt in
                     Button {
-                        sortOption = opt
+                        sortOptionRawValue = opt.rawValue
                     } label: {
                         if sortOption == opt {
                             Label(opt.localizedName, systemImage: "checkmark")
@@ -418,20 +468,51 @@ struct FoodListView: View {
     }
 
     private func deleteItem(_ item: FoodItem) {
+        let snapshot = FoodItemSnapshot(item: item)
         do {
             try repository.delete(item)
             loadItems()
             NotificationService.shared.refreshSchedule(using: repository)
+            feedbackCenter.showUndo(
+                message: String(
+                    format: NSLocalizedString("feedback.deletedFormat", comment: ""),
+                    snapshot.name
+                )
+            ) {
+                do {
+                    try repository.restore(snapshot)
+                    loadItems()
+                    NotificationService.shared.refreshSchedule(using: repository)
+                } catch {
+                    operationError = error.localizedDescription
+                }
+            }
         } catch {
             operationError = error.localizedDescription
         }
     }
 
     private func markEaten(_ item: FoodItem) {
+        let snapshot = FoodItemSnapshot(item: item)
         do {
-            try repository.archiveItem(item, status: .eaten)
+            let record = try repository.archiveItemForUndo(item, status: .eaten)
             loadItems()
             NotificationService.shared.refreshSchedule(using: repository)
+            feedbackCenter.showUndo(
+                message: String(
+                    format: NSLocalizedString("feedback.archivedFormat", comment: ""),
+                    snapshot.name,
+                    FoodStatus.eaten.localizedName
+                )
+            ) {
+                do {
+                    try repository.restoreArchivedItem(snapshot, removing: record)
+                    loadItems()
+                    NotificationService.shared.refreshSchedule(using: repository)
+                } catch {
+                    operationError = error.localizedDescription
+                }
+            }
         } catch {
             operationError = error.localizedDescription
         }
@@ -470,7 +551,7 @@ struct FoodListView: View {
                 try repository.deleteItems(targets)
                 inventoryChanged = true
             }
-            bulkResultMessage = action.completionMessage(count: targets.count)
+            feedbackCenter.show(message: action.completionMessage(count: targets.count))
             loadItems()
             selection.retain(in: displayedItems)
             if selection.isEmpty { isSelecting = false }
@@ -500,7 +581,7 @@ struct FoodRowView: View {
                 Text(item.categoryEnum.localizedName)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                Text("\(item.quantity.formatted()) \(item.unit)  •  \(item.storageLocationEnum.localizedName)")
+                Text("\(item.quantity.formatted()) \(item.unit.localizedFoodUnit)  •  \(item.storageLocationEnum.localizedName)")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                 if let exp = item.expirationDate {
@@ -552,7 +633,7 @@ struct FoodGridCell: View {
                 .foregroundStyle(.secondary)
 
             HStack(alignment: .top) {
-                Text("\(item.quantity.formatted()) \(item.unit)")
+                Text("\(item.quantity.formatted()) \(item.unit.localizedFoodUnit)")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -588,8 +669,31 @@ struct ExpirationBadge: View {
     }
 }
 
+private struct ActiveFilterChip: View {
+    let title: String
+    let onRemove: () -> Void
+
+    var body: some View {
+        Button(action: onRemove) {
+            HStack(spacing: AppSpacing.xSmall) {
+                Text(title)
+                    .lineLimit(1)
+                Image(systemName: "xmark")
+                    .font(.caption2.bold())
+            }
+            .font(.footnote.weight(.medium))
+            .padding(.horizontal, AppSpacing.small)
+            .padding(.vertical, 6)
+            .background(Color.accentColor.opacity(0.12), in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("filter.removeHint")
+    }
+}
+
 #Preview {
     FoodListView()
         .modelContainer(PersistenceController.preview.container)
         .environmentObject(CloudKitService.shared)
+        .environmentObject(AppFeedbackCenter())
 }

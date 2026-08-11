@@ -3,7 +3,9 @@ import SwiftData
 
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @EnvironmentObject private var cloudKitService: CloudKitService
+    @State private var dismissedSyncNoticeIdentifier: String?
     @State private var activeItems: [FoodItem] = []
     @State private var searchText = ""
     @State private var showAddFood = false
@@ -35,15 +37,32 @@ struct HomeView: View {
 
     private var repository: FoodRepository { FoodRepository(context: modelContext) }
 
+    private var metricColumns: [GridItem] {
+        Array(
+            repeating: GridItem(.flexible(), spacing: AppSpacing.medium),
+            count: dynamicTypeSize.isAccessibilitySize ? 1 : 3
+        )
+    }
+
     var body: some View {
         let attentionItems = HomeAttentionItems(items: activeItems)
 
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.xLarge) {
-                    SyncStatusBanner(status: cloudKitService.syncStatus)
+                    if let syncNoticeIdentifier,
+                       dismissedSyncNoticeIdentifier != syncNoticeIdentifier {
+                        SyncStatusBanner(
+                            status: cloudKitService.syncStatus,
+                            onDismiss: {
+                                dismissedSyncNoticeIdentifier = syncNoticeIdentifier
+                            }
+                        )
+                    }
                     if isSearching {
                         searchResultsSection
+                    } else if activeItems.isEmpty {
+                        HomeOnboardingView(addAction: { showAddFood = true })
                     } else {
                         attentionSection(attentionItems)
                         summaryCards(attentionItems)
@@ -58,7 +77,7 @@ struct HomeView: View {
             .refreshable { loadItems() }
             .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("nav.home")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(dynamicTypeSize.isAccessibilitySize ? .inline : .large)
             .searchable(text: $searchText, prompt: "search.prompt")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -84,6 +103,11 @@ struct HomeView: View {
                 Text(dataError ?? "")
             }
             .onAppear { loadItems() }
+            .onChange(of: syncNoticeIdentifier) { oldValue, newValue in
+                if oldValue != newValue {
+                    dismissedSyncNoticeIdentifier = nil
+                }
+            }
         }
     }
 
@@ -99,6 +123,14 @@ struct HomeView: View {
             if attentionItems.isEmpty {
                 HomeAttentionAllClearView()
             } else {
+                if !attentionItems.useToday.isEmpty {
+                    HomeActionGroup(
+                        kind: .today,
+                        items: attentionItems.useToday,
+                        onItemChange: loadItems
+                    )
+                }
+
                 if !attentionItems.expired.isEmpty {
                     HomeActionGroup(
                         kind: .expired,
@@ -120,10 +152,7 @@ struct HomeView: View {
 
     private func summaryCards(_ attentionItems: HomeAttentionItems) -> some View {
         LazyVGrid(
-            columns: Array(
-                repeating: GridItem(.flexible(), spacing: AppSpacing.medium),
-                count: 3
-            ),
+            columns: metricColumns,
             spacing: AppSpacing.medium
         ) {
             NavigationLink {
@@ -136,19 +165,29 @@ struct HomeView: View {
                     icon: "refrigerator.fill"
                 )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(HomeMetricButtonStyle())
+            .accessibilityLabel(metricAccessibilityLabel(
+                title: NSLocalizedString("home.total", comment: ""),
+                count: totalCount
+            ))
+            .accessibilityHint("accessibility.openFilteredList")
 
             NavigationLink {
                 HomeMetricListView(selection: .expiringSoon, onItemChange: loadItems)
             } label: {
                 SummaryCard(
                     title: NSLocalizedString("home.expiringSoon", comment: ""),
-                    count: attentionItems.useSoon.count,
+                    count: attentionItems.expiringSoonCount,
                     color: Color(uiColor: .systemOrange),
                     icon: "clock.fill"
                 )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(HomeMetricButtonStyle())
+            .accessibilityLabel(metricAccessibilityLabel(
+                title: NSLocalizedString("home.expiringSoon", comment: ""),
+                count: attentionItems.expiringSoonCount
+            ))
+            .accessibilityHint("accessibility.openFilteredList")
 
             NavigationLink {
                 HomeMetricListView(selection: .expired, onItemChange: loadItems)
@@ -160,7 +199,12 @@ struct HomeView: View {
                     icon: "exclamationmark.triangle.fill"
                 )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(HomeMetricButtonStyle())
+            .accessibilityLabel(metricAccessibilityLabel(
+                title: NSLocalizedString("home.expired", comment: ""),
+                count: attentionItems.expired.count
+            ))
+            .accessibilityHint("accessibility.openFilteredList")
         }
     }
 
@@ -168,10 +212,7 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: AppSpacing.medium) {
             AppSectionHeader(title: "home.byLocation")
             LazyVGrid(
-                columns: Array(
-                    repeating: GridItem(.flexible(), spacing: AppSpacing.medium),
-                    count: 3
-                ),
+                columns: metricColumns,
                 spacing: AppSpacing.medium
             ) {
                 locationLink(for: .fridge, count: fridgeItems.count)
@@ -187,7 +228,19 @@ struct HomeView: View {
         } label: {
             LocationCard(location: location, count: count)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(HomeMetricButtonStyle())
+        .accessibilityLabel(metricAccessibilityLabel(title: location.localizedName, count: count))
+        .accessibilityHint("accessibility.openFilteredList")
+    }
+
+    private func metricAccessibilityLabel(title: String, count: Int) -> Text {
+        Text(
+            String(
+                format: NSLocalizedString("accessibility.metricCountFormat", comment: ""),
+                title.replacingOccurrences(of: "\n", with: " "),
+                count
+            )
+        )
     }
 
     private var recentSection: some View {
@@ -261,16 +314,32 @@ struct HomeView: View {
             dataError = error.localizedDescription
         }
     }
+
+    private var syncNoticeIdentifier: String? {
+        switch cloudKitService.syncStatus {
+        case .idle, .synced:
+            nil
+        case .syncing:
+            "syncing"
+        case .notLoggedIn:
+            "notLoggedIn"
+        case .error(let message):
+            "error:\(message)"
+        }
+    }
 }
 
 // MARK: - Home actions
 
 private enum HomeActionKind {
+    case today
     case expired
     case useSoon
 
     var title: LocalizedStringKey {
         switch self {
+        case .today:
+            "home.useToday"
         case .expired:
             "home.expiredNow"
         case .useSoon:
@@ -280,6 +349,8 @@ private enum HomeActionKind {
 
     var subtitle: LocalizedStringKey {
         switch self {
+        case .today:
+            "home.useTodaySubtitle"
         case .expired:
             "home.expiredNowSubtitle"
         case .useSoon:
@@ -289,6 +360,8 @@ private enum HomeActionKind {
 
     var systemImage: String {
         switch self {
+        case .today:
+            "fork.knife"
         case .expired:
             "exclamationmark.triangle.fill"
         case .useSoon:
@@ -298,6 +371,8 @@ private enum HomeActionKind {
 
     var tint: Color {
         switch self {
+        case .today:
+            Color(uiColor: .systemIndigo)
         case .expired:
             Color(uiColor: .systemRed)
         case .useSoon:
@@ -307,6 +382,8 @@ private enum HomeActionKind {
 
     func items(in attentionItems: HomeAttentionItems) -> [FoodItem] {
         switch self {
+        case .today:
+            attentionItems.useToday
         case .expired:
             attentionItems.expired
         case .useSoon:
@@ -420,6 +497,7 @@ private struct HomeAttentionAllClearView: View {
 private struct HomeActionListView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var activeItems: [FoodItem] = []
+    @State private var dataError: String?
 
     let kind: HomeActionKind
     let onItemChange: () -> Void
@@ -452,10 +530,22 @@ private struct HomeActionListView: View {
         .navigationTitle(kind.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: loadItems)
+        .alert("alert.errorTitle", isPresented: Binding(
+            get: { dataError != nil },
+            set: { if !$0 { dataError = nil } }
+        )) {
+            Button("button.ok") { dataError = nil }
+        } message: {
+            Text(dataError ?? "")
+        }
     }
 
     private func loadItems() {
-        activeItems = (try? FoodRepository(context: modelContext).fetchActive()) ?? []
+        do {
+            activeItems = try FoodRepository(context: modelContext).fetchActive()
+        } catch {
+            dataError = error.localizedDescription
+        }
     }
 
     private func reloadItems() {
@@ -500,6 +590,7 @@ private enum HomeMetricSelection {
 private struct HomeMetricListView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var activeItems: [FoodItem] = []
+    @State private var dataError: String?
 
     let selection: HomeMetricSelection
     let onItemChange: () -> Void
@@ -532,10 +623,22 @@ private struct HomeMetricListView: View {
         .navigationTitle(selection.title)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: loadItems)
+        .alert("alert.errorTitle", isPresented: Binding(
+            get: { dataError != nil },
+            set: { if !$0 { dataError = nil } }
+        )) {
+            Button("button.ok") { dataError = nil }
+        } message: {
+            Text(dataError ?? "")
+        }
     }
 
     private func loadItems() {
-        activeItems = (try? FoodRepository(context: modelContext).fetchActive()) ?? []
+        do {
+            activeItems = try FoodRepository(context: modelContext).fetchActive()
+        } catch {
+            dataError = error.localizedDescription
+        }
     }
 
     private func reloadItems() {
@@ -547,68 +650,136 @@ private struct HomeMetricListView: View {
 // MARK: - SummaryCard
 
 struct SummaryCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     let title: String
     let count: Int
     let color: Color
     let icon: String
 
     var body: some View {
-        VStack(spacing: AppSpacing.small) {
-            Image(systemName: icon)
-                .symbolRenderingMode(.monochrome)
-                .font(.system(size: 19, weight: .bold))
-                .foregroundStyle(.white)
-                .frame(width: 44, height: 44)
-                .background(color.gradient, in: RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
-                .shadow(color: color.opacity(0.22), radius: 5, y: 3)
-            Text("\(count)")
-                .font(.system(size: 30, weight: .bold, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(.primary)
-            Text(title)
-                .font(.footnote.weight(.medium))
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .frame(maxWidth: .infinity)
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                HStack(spacing: AppSpacing.medium) {
+                    metricIcon
+                    VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                        Text("\(count)")
+                            .font(.title.bold())
+                            .monospacedDigit()
+                        Text(title)
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: AppSpacing.small)
+                    chevron
+                }
+            } else {
+                VStack(spacing: AppSpacing.small) {
+                    metricIcon
+                    Text("\(count)")
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(.primary)
+                    Text(title)
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .frame(maxWidth: .infinity)
+                }
+                .frame(minHeight: 126)
+                .overlay(alignment: .topTrailing) {
+                    chevron
+                }
+            }
         }
         .frame(maxWidth: .infinity)
-        .frame(minHeight: 126)
         .padding(AppSpacing.medium)
         .background(HomeMetricCardBackground(tint: color))
         .accessibilityElement(children: .combine)
+    }
+
+    private var metricIcon: some View {
+        Image(systemName: icon)
+            .symbolRenderingMode(.monochrome)
+            .font(.system(size: 19, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(width: 44, height: 44)
+            .background(color.gradient, in: RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
+            .shadow(color: color.opacity(0.22), radius: 5, y: 3)
+    }
+
+    private var chevron: some View {
+        Image(systemName: "chevron.right")
+            .font(.caption.bold())
+            .foregroundStyle(.tertiary)
+            .accessibilityHidden(true)
     }
 }
 
 // MARK: - LocationCard
 
 struct LocationCard: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     let location: StorageLocation
     let count: Int
 
     var body: some View {
-        VStack(spacing: AppSpacing.small) {
-            Image(systemName: icon)
-                .symbolRenderingMode(.monochrome)
-                .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(.white)
-                .frame(width: 42, height: 42)
-                .background(tint.gradient, in: RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
-                .shadow(color: tint.opacity(0.2), radius: 4, y: 2)
-            Text("\(count)")
-                .font(.system(size: 25, weight: .bold, design: .rounded))
-                .monospacedDigit()
-            Text(location.localizedName)
-                .font(.footnote.weight(.medium))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                HStack(spacing: AppSpacing.medium) {
+                    locationIcon
+                    VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
+                        Text("\(count)")
+                            .font(.title.bold())
+                            .monospacedDigit()
+                        Text(location.localizedName)
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: AppSpacing.small)
+                    chevron
+                }
+            } else {
+                VStack(spacing: AppSpacing.small) {
+                    locationIcon
+                    Text("\(count)")
+                        .font(.system(size: 25, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                    Text(location.localizedName)
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                .frame(minHeight: 116)
+                .overlay(alignment: .topTrailing) {
+                    chevron
+                }
+            }
         }
         .frame(maxWidth: .infinity)
-        .frame(minHeight: 116)
         .padding(AppSpacing.medium)
         .background(HomeMetricCardBackground(tint: tint))
         .accessibilityElement(children: .combine)
+    }
+
+    private var locationIcon: some View {
+        Image(systemName: icon)
+            .symbolRenderingMode(.monochrome)
+            .font(.system(size: 18, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(width: 42, height: 42)
+            .background(tint.gradient, in: RoundedRectangle(cornerRadius: AppCornerRadius.medium, style: .continuous))
+            .shadow(color: tint.opacity(0.2), radius: 4, y: 2)
+    }
+
+    private var chevron: some View {
+        Image(systemName: "chevron.right")
+            .font(.caption.bold())
+            .foregroundStyle(.tertiary)
+            .accessibilityHidden(true)
     }
 
     private var icon: String {
@@ -660,6 +831,7 @@ private struct HomeMetricCardBackground: View {
 
 struct SyncStatusBanner: View {
     let status: SyncStatus
+    var onDismiss: (() -> Void)? = nil
 
     var body: some View {
         switch status {
@@ -672,26 +844,94 @@ struct SyncStatusBanner: View {
                 tint: .accentColor
             )
         case .error(let msg):
-            VStack(alignment: .leading, spacing: AppSpacing.xSmall) {
-                StatusBadge(
-                    title: NSLocalizedString("alert.errorTitle", comment: ""),
-                    systemImage: "exclamationmark.triangle.fill",
-                    tint: Color(uiColor: .systemRed)
-                )
+            HStack(alignment: .top, spacing: AppSpacing.small) {
+                Image(systemName: "icloud.slash.fill")
+                    .foregroundStyle(Color(uiColor: .systemOrange))
                 Text(msg)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+                Spacer(minLength: AppSpacing.xSmall)
+                dismissButton
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .appCardStyle()
+            .appCardStyle(padding: AppSpacing.medium)
         case .notLoggedIn:
-            StatusBadge(
-                title: NSLocalizedString("sync.notLoggedIn", comment: ""),
-                systemImage: "icloud.slash.fill",
-                tint: Color(uiColor: .systemOrange)
-            )
+            HStack(alignment: .top, spacing: AppSpacing.small) {
+                Image(systemName: "icloud.slash.fill")
+                    .foregroundStyle(Color(uiColor: .systemOrange))
+                Text("sync.notLoggedIn")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: AppSpacing.xSmall)
+                dismissButton
+            }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .appCardStyle(padding: AppSpacing.medium)
         }
+    }
+
+    @ViewBuilder
+    private var dismissButton: some View {
+        if let onDismiss {
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.caption.bold())
+                    .foregroundStyle(.secondary)
+                    .frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("button.dismiss")
+        }
+    }
+}
+
+private struct HomeOnboardingView: View {
+    let addAction: () -> Void
+
+    var body: some View {
+        VStack(spacing: AppSpacing.xLarge) {
+            ZStack {
+                RoundedRectangle(cornerRadius: AppCornerRadius.xLarge, style: .continuous)
+                    .fill(Color.accentColor.gradient)
+                    .frame(width: 112, height: 112)
+                Image(systemName: "refrigerator.fill")
+                    .font(.system(size: 48, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+            .accessibilityHidden(true)
+
+            VStack(spacing: AppSpacing.small) {
+                Text("onboarding.emptyTitle")
+                    .font(.title2.bold())
+                    .multilineTextAlignment(.center)
+                Text("onboarding.emptySubtitle")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button(action: addAction) {
+                Label("onboarding.addFirstItem", systemImage: "plus")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+        }
+        .padding(AppSpacing.xLarge)
+        .frame(maxWidth: .infinity)
+        .appCardStyle()
+    }
+}
+
+private struct HomeMetricButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .opacity(configuration.isPressed ? 0.88 : 1)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 

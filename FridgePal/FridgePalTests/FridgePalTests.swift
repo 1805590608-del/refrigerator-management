@@ -155,6 +155,23 @@ final class HomeAttentionItemsTests: XCTestCase {
 
         XCTAssertTrue(HomeAttentionItems(items: [fresh, noDate]).isEmpty)
     }
+
+    func testSeparatesFoodExpiringTodayFromUpcomingFood() {
+        let today = FoodItem(
+            name: "Eat today",
+            expirationDate: Calendar.current.startOfDay(for: Date())
+        )
+        let tomorrow = FoodItem(
+            name: "Eat tomorrow",
+            expirationDate: Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+        )
+
+        let attentionItems = HomeAttentionItems(items: [tomorrow, today])
+
+        XCTAssertEqual(attentionItems.useToday.map(\.name), ["Eat today"])
+        XCTAssertEqual(attentionItems.useSoon.map(\.name), ["Eat tomorrow"])
+        XCTAssertEqual(attentionItems.expiringSoonCount, 2)
+    }
 }
 
 // MARK: - ImageService Tests
@@ -388,6 +405,7 @@ final class HistoryRecordTests: XCTestCase {
             storageLocation: .fridge,
             quantity: 2,
             unit: "block",
+            barcode: "0123456789012",
             expirationDate: Calendar.current.date(byAdding: .day, value: 3, to: Date())!,
             notes: "Cheddar"
         )
@@ -395,6 +413,7 @@ final class HistoryRecordTests: XCTestCase {
         XCTAssertEqual(record.foodName, "Test Cheese")
         XCTAssertEqual(record.finalStatusEnum, .eaten)
         XCTAssertEqual(record.categoryEnum, .dairy)
+        XCTAssertEqual(record.barcode, item.barcode)
     }
 }
 
@@ -412,6 +431,7 @@ final class FoodFormDraftTests: XCTestCase {
             storageLocation: .fridge,
             quantity: 4,
             unit: "pack",
+            barcode: "9876543210123",
             purchaseDate: purchaseDate,
             expirationDate: expirationDate,
             photoData: photoData,
@@ -425,6 +445,7 @@ final class FoodFormDraftTests: XCTestCase {
         XCTAssertEqual(draft.storageLocation, source.storageLocationEnum)
         XCTAssertEqual(draft.quantity, source.quantity)
         XCTAssertEqual(draft.unit, source.unit)
+        XCTAssertEqual(draft.barcode, source.barcode)
         XCTAssertEqual(draft.purchaseDate, source.purchaseDate)
         XCTAssertEqual(draft.expirationDate, expirationDate)
         XCTAssertTrue(draft.hasExpirationDate)
@@ -445,6 +466,7 @@ final class FoodFormDraftTests: XCTestCase {
         XCTAssertEqual(repeatedItem.storageLocationEnum, .fridge)
         XCTAssertEqual(repeatedItem.quantity, 2)
         XCTAssertEqual(repeatedItem.unit, "pack")
+        XCTAssertEqual(repeatedItem.barcode, source.barcode)
         XCTAssertEqual(repeatedItem.purchaseDate, purchaseDate)
         XCTAssertEqual(repeatedItem.expirationDate, expirationDate)
         XCTAssertEqual(repeatedItem.photoData, photoData)
@@ -473,7 +495,7 @@ final class FoodFormDraftTests: XCTestCase {
         XCTAssertEqual(draft.storageLocation, .freezer)
         XCTAssertEqual(draft.quantity, record.quantity)
         XCTAssertEqual(draft.unit, record.unit)
-        XCTAssertEqual(draft.purchaseDate, record.purchaseDate)
+        XCTAssertLessThan(abs(draft.purchaseDate.timeIntervalSinceNow), 2)
         XCTAssertFalse(draft.hasExpirationDate)
         XCTAssertEqual(draft.photoData, record.photoData)
         XCTAssertEqual(draft.notes, record.notes)
@@ -492,7 +514,7 @@ final class FoodFormDraftTests: XCTestCase {
         XCTAssertEqual(repeatedItem.storageLocationEnum, .fridge)
         XCTAssertEqual(repeatedItem.quantity, record.quantity)
         XCTAssertEqual(repeatedItem.unit, record.unit)
-        XCTAssertEqual(repeatedItem.purchaseDate, record.purchaseDate)
+        XCTAssertEqual(repeatedItem.purchaseDate, draft.purchaseDate)
         XCTAssertEqual(repeatedItem.expirationDate, draft.expirationDate)
         XCTAssertEqual(repeatedItem.photoData, record.photoData)
         XCTAssertEqual(repeatedItem.notes, record.notes)
@@ -608,6 +630,178 @@ final class ShoppingRepositoryTests: XCTestCase {
         XCTAssertEqual(item.preferredQuantity, 2)
         XCTAssertEqual(item.unit, "bag")
         XCTAssertEqual(try repository.fetchAll().map(\.id), [item.id])
+    }
+
+    func testMatchingPendingItemsMergeQuantities() throws {
+        let schema = Schema([ShoppingItem.self])
+        let configuration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let repository = ShoppingRepository(context: container.mainContext)
+
+        _ = try repository.add(
+            name: "Crème",
+            category: .dairy,
+            preferredQuantity: 1,
+            unit: "bottle"
+        )
+        let merged = try repository.add(
+            name: " creme ",
+            category: .other,
+            preferredQuantity: 2,
+            unit: "bottle"
+        )
+
+        let items = try repository.fetchAll()
+        XCTAssertEqual(items.count, 1)
+        XCTAssertEqual(merged.preferredQuantity, 3)
+        XCTAssertEqual(merged.categoryEnum, .dairy)
+    }
+
+    func testCompletedItemsDoNotAbsorbNewPurchases() throws {
+        let schema = Schema([ShoppingItem.self])
+        let configuration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let repository = ShoppingRepository(context: container.mainContext)
+        let completed = try repository.add(
+            name: "Milk",
+            category: .dairy,
+            preferredQuantity: 1,
+            unit: "bottle"
+        )
+        try repository.setCompleted(completed, isCompleted: true)
+
+        _ = try repository.add(
+            name: "Milk",
+            category: .dairy,
+            preferredQuantity: 2,
+            unit: "bottle"
+        )
+
+        XCTAssertEqual(try repository.fetchAll().count, 2)
+    }
+
+    func testClearCompletedCanBeRestoredFromSnapshots() throws {
+        let schema = Schema([ShoppingItem.self])
+        let configuration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true,
+            cloudKitDatabase: .none
+        )
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let repository = ShoppingRepository(context: container.mainContext)
+        let completed = try repository.add(
+            name: "Bread",
+            category: .other,
+            preferredQuantity: 1,
+            unit: "bag"
+        )
+        try repository.setCompleted(completed, isCompleted: true)
+        let snapshot = ShoppingItemSnapshot(item: completed)
+
+        try repository.clearCompleted()
+        XCTAssertTrue(try repository.fetchAll().isEmpty)
+
+        try repository.restore([snapshot])
+        let restored = try XCTUnwrap(repository.fetchAll().first)
+        XCTAssertEqual(restored.id, snapshot.id)
+        XCTAssertTrue(restored.isCompleted)
+    }
+}
+
+// MARK: - Fast Entry Tests
+
+final class FastEntryTests: XCTestCase {
+    func testFrequentTemplatesRankByUseCountAndRefreshDates() {
+        let milk = FoodItem(
+            name: "Milk",
+            category: .dairy,
+            purchaseDate: Date(timeIntervalSince1970: 1_700_000_000),
+            expirationDate: Date(timeIntervalSince1970: 1_700_604_800)
+        )
+        let apple = FoodItem(name: "Apple", category: .fruit)
+        let records = [
+            HistoryRecord(from: apple, finalStatus: .eaten),
+            HistoryRecord(from: milk, finalStatus: .eaten),
+            HistoryRecord(from: milk, finalStatus: .eaten)
+        ]
+
+        let templates = FoodTemplateBuilder.templates(from: records)
+
+        XCTAssertEqual(templates.first?.draft.name, "Milk")
+        XCTAssertEqual(templates.first?.useCount, 2)
+        XCTAssertLessThan(abs(templates[0].draft.purchaseDate.timeIntervalSinceNow), 2)
+        XCTAssertEqual(
+            Calendar.current.dateComponents(
+                [.day],
+                from: Calendar.current.startOfDay(for: templates[0].draft.purchaseDate),
+                to: Calendar.current.startOfDay(for: templates[0].draft.expirationDate)
+            ).day,
+            7
+        )
+    }
+
+    func testScanParserExtractsBarcodeNameAndExpirationDate() throws {
+        let result = AddEditFoodView.FoodScanResult(
+            barcode: "0123456789012",
+            textLines: ["Organic Yogurt", "BEST BEFORE 2099/08/21"]
+        )
+
+        let parsed = AddEditFoodView.FoodScanParser.parse(result)
+
+        XCTAssertEqual(parsed.barcode, "0123456789012")
+        XCTAssertEqual(parsed.suggestedName, "Organic Yogurt")
+        let date = try XCTUnwrap(parsed.expirationDate)
+        XCTAssertEqual(Calendar.current.component(.year, from: date), 2099)
+        XCTAssertEqual(Calendar.current.component(.month, from: date), 8)
+        XCTAssertEqual(Calendar.current.component(.day, from: date), 21)
+    }
+
+    func testScanParserKeepsPastDateWhenExplicitlyLabeledAsExpiration() throws {
+        let result = AddEditFoodView.FoodScanResult(
+            textLines: ["EXP 2001-02-03"]
+        )
+
+        let parsed = AddEditFoodView.FoodScanParser.parse(result)
+
+        let date = try XCTUnwrap(parsed.expirationDate)
+        XCTAssertEqual(Calendar.current.component(.year, from: date), 2001)
+        XCTAssertEqual(Calendar.current.component(.month, from: date), 2)
+        XCTAssertEqual(Calendar.current.component(.day, from: date), 3)
+    }
+
+    func testShoppingDraftUsesCategoryShelfLife() {
+        let shoppingItem = ShoppingItem(
+            name: "Chicken",
+            category: .meat
+        )
+
+        let draft = FoodFormDraft(shoppingItem: shoppingItem)
+
+        XCTAssertEqual(
+            Calendar.current.dateComponents(
+                [.day],
+                from: Calendar.current.startOfDay(for: draft.purchaseDate),
+                to: Calendar.current.startOfDay(for: draft.expirationDate)
+            ).day,
+            FoodCategory.meat.defaultShelfLifeDays
+        )
+    }
+
+    func testFoodUnitsUseFractionalStepsForMeasuredQuantities() {
+        XCTAssertEqual(FoodUnit.kg.quantityStep, 0.1)
+        XCTAssertEqual(FoodUnit.mL.quantityStep, 1)
+        XCTAssertEqual(FoodUnit.item.quantityStep, 1)
+        XCTAssertEqual(FoodUnit.pack.quantityStep, 1)
+        XCTAssertEqual(FoodUnit.item.minimumQuantity, 1)
+        XCTAssertEqual(FoodUnit.kg.minimumQuantity, 0.1)
     }
 }
 

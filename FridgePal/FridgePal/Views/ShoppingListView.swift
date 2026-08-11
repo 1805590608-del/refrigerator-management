@@ -3,9 +3,11 @@ import SwiftData
 
 struct ShoppingListView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var feedbackCenter: AppFeedbackCenter
     @Query(sort: \ShoppingItem.createdAt, order: .reverse) private var items: [ShoppingItem]
     @State private var errorMessage: String?
     @State private var showAddItem = false
+    @State private var itemToAddToFridge: ShoppingItem?
 
     private var itemsToBuy: [ShoppingItem] {
         items.filter { !$0.isCompleted }
@@ -28,7 +30,7 @@ struct ShoppingListView: View {
                         }
 
                         if !completedItems.isEmpty {
-                            shoppingSection(title: "shopping.completed", items: completedItems)
+                            completedSection
                         }
                     }
                     .listStyle(.insetGrouped)
@@ -52,6 +54,12 @@ struct ShoppingListView: View {
             .sheet(isPresented: $showAddItem) {
                 AddShoppingItemView()
             }
+            .sheet(item: $itemToAddToFridge) { item in
+                AddEditFoodView(
+                    prefill: FoodFormDraft(shoppingItem: item),
+                    onSaved: { moveToFridge(item) }
+                )
+            }
             .alert("alert.errorTitle", isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
@@ -69,9 +77,10 @@ struct ShoppingListView: View {
     ) -> some View {
         Section(title) {
             ForEach(items) { item in
-                ShoppingItemRowView(item: item) {
-                    toggleCompletion(for: item)
-                }
+                ShoppingItemRowView(
+                    item: item,
+                    toggleCompletion: { toggleCompletion(for: item) }
+                )
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
                         delete(item)
@@ -83,18 +92,101 @@ struct ShoppingListView: View {
         }
     }
 
+    private var completedSection: some View {
+        Section {
+            ForEach(completedItems) { item in
+                ShoppingItemRowView(
+                    item: item,
+                    toggleCompletion: { toggleCompletion(for: item) },
+                    addToFridge: { itemToAddToFridge = item }
+                )
+                .swipeActions(edge: .leading) {
+                    Button {
+                        itemToAddToFridge = item
+                    } label: {
+                        Label("shopping.addToFridge", systemImage: "refrigerator.fill")
+                    }
+                    .tint(.accentColor)
+                }
+                .swipeActions(edge: .trailing) {
+                    Button(role: .destructive) {
+                        delete(item)
+                    } label: {
+                        Label("button.delete", systemImage: "trash")
+                    }
+                }
+            }
+        } header: {
+            HStack {
+                Text("shopping.completed")
+                Spacer()
+                Button("shopping.clearCompleted", action: clearCompleted)
+                    .font(.caption.weight(.semibold))
+                    .textCase(nil)
+            }
+        } footer: {
+            Text("shopping.completedFooter")
+        }
+    }
+
     private func toggleCompletion(for item: ShoppingItem) {
         do {
             try ShoppingRepository(context: modelContext)
                 .setCompleted(item, isCompleted: !item.isCompleted)
+            UISelectionFeedbackGenerator().selectionChanged()
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
     private func delete(_ item: ShoppingItem) {
+        let snapshot = ShoppingItemSnapshot(item: item)
         do {
             try ShoppingRepository(context: modelContext).delete(item)
+            feedbackCenter.showUndo(
+                message: String(
+                    format: NSLocalizedString("feedback.deletedFormat", comment: ""),
+                    snapshot.name
+                )
+            ) {
+                do {
+                    try ShoppingRepository(context: modelContext).restore([snapshot])
+                } catch {
+                    feedbackCenter.showError(message: error.localizedDescription)
+                }
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func clearCompleted() {
+        let snapshots = completedItems.map(ShoppingItemSnapshot.init(item:))
+        do {
+            try ShoppingRepository(context: modelContext).clearCompleted()
+            feedbackCenter.showUndo(
+                message: NSLocalizedString("feedback.clearedCompleted", comment: "")
+            ) {
+                do {
+                    try ShoppingRepository(context: modelContext).restore(snapshots)
+                } catch {
+                    feedbackCenter.showError(message: error.localizedDescription)
+                }
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func moveToFridge(_ item: ShoppingItem) {
+        do {
+            try ShoppingRepository(context: modelContext).delete(item)
+            feedbackCenter.show(
+                message: String(
+                    format: NSLocalizedString("shopping.movedToFridgeFormat", comment: ""),
+                    item.name
+                )
+            )
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -102,10 +194,9 @@ struct ShoppingListView: View {
 }
 
 private struct AddShoppingItemView: View {
-    private let units = ["item", "box", "bag", "bottle", "g", "kg", "oz", "lb", "L", "mL", "pack", "can", "piece"]
-
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var feedbackCenter: AppFeedbackCenter
 
     @State private var name = ""
     @State private var category: FoodCategory = .other
@@ -141,7 +232,7 @@ private struct AddShoppingItemView: View {
                 }
 
                 Section {
-                    Stepper(value: $preferredQuantity, in: 0.1...9999, step: 1) {
+                    Stepper(value: $preferredQuantity, in: quantityRange, step: quantityStep) {
                         HStack {
                             Text("field.quantity")
                             Spacer()
@@ -150,9 +241,9 @@ private struct AddShoppingItemView: View {
                     }
 
                     Picker("field.unit", selection: $unit) {
-                        ForEach(units, id: \.self) { unit in
-                            Text(NSLocalizedString("unit.\(unit)", comment: unit))
-                                .tag(unit)
+                        ForEach(FoodUnit.allCases) { unit in
+                            Text(unit.localizedName)
+                                .tag(unit.rawValue)
                         }
                     }
                 } header: {
@@ -180,6 +271,9 @@ private struct AddShoppingItemView: View {
             } message: {
                 Text(saveError ?? "")
             }
+            .onChange(of: unit) { _, _ in
+                preferredQuantity = max(preferredQuantity, selectedUnit.minimumQuantity)
+            }
         }
     }
 
@@ -198,16 +292,35 @@ private struct AddShoppingItemView: View {
                 preferredQuantity: preferredQuantity,
                 unit: unit
             )
+            feedbackCenter.show(
+                message: String(
+                    format: NSLocalizedString("shopping.addedFormat", comment: ""),
+                    trimmedName
+                )
+            )
             dismiss()
         } catch {
             saveError = error.localizedDescription
         }
+    }
+
+    private var quantityStep: Double {
+        selectedUnit.quantityStep
+    }
+
+    private var quantityRange: ClosedRange<Double> {
+        selectedUnit.minimumQuantity...9_999
+    }
+
+    private var selectedUnit: FoodUnit {
+        FoodUnit(rawValue: unit) ?? .item
     }
 }
 
 private struct ShoppingItemRowView: View {
     let item: ShoppingItem
     let toggleCompletion: () -> Void
+    var addToFridge: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: AppSpacing.medium) {
@@ -225,7 +338,7 @@ private struct ShoppingItemRowView: View {
                     .strikethrough(item.isCompleted)
                     .foregroundStyle(item.isCompleted ? .secondary : .primary)
 
-                Text("\(item.categoryEnum.localizedName) • \(item.preferredQuantity.formatted()) \(item.unit)")
+                Text("\(item.categoryEnum.localizedName) • \(item.preferredQuantity.formatted()) \(item.unit.localizedFoodUnit)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -233,9 +346,20 @@ private struct ShoppingItemRowView: View {
 
             Spacer()
 
-            Text(item.categoryEnum.emoji)
-                .font(.title2)
-                .accessibilityHidden(true)
+            if let addToFridge {
+                Button(action: addToFridge) {
+                    Image(systemName: "refrigerator.fill")
+                        .font(.body.weight(.semibold))
+                        .frame(width: 36, height: 36)
+                }
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.circle)
+                .accessibilityLabel("shopping.addToFridge")
+            } else {
+                Text(item.categoryEnum.emoji)
+                    .font(.title2)
+                    .accessibilityHidden(true)
+            }
         }
         .padding(.vertical, AppSpacing.xSmall)
     }
@@ -256,4 +380,5 @@ private struct ShoppingItemRowView: View {
 #Preview {
     ShoppingListView()
         .modelContainer(PersistenceController.preview.container)
+        .environmentObject(AppFeedbackCenter())
 }

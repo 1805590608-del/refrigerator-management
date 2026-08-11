@@ -9,6 +9,7 @@ struct FoodFormDraft {
     var storageLocation: StorageLocation
     var quantity: Double
     var unit: String
+    var barcode: String
     var purchaseDate: Date
     var expirationDate: Date
     var hasExpirationDate: Bool
@@ -21,6 +22,7 @@ struct FoodFormDraft {
         storageLocation: StorageLocation = .fridge,
         quantity: Double = 1,
         unit: String = "item",
+        barcode: String = "",
         purchaseDate: Date = Date(),
         expirationDate: Date = FoodFormDraft.defaultExpirationDate,
         hasExpirationDate: Bool = true,
@@ -32,6 +34,7 @@ struct FoodFormDraft {
         self.storageLocation = storageLocation
         self.quantity = quantity
         self.unit = unit
+        self.barcode = barcode
         self.purchaseDate = purchaseDate
         self.expirationDate = expirationDate
         self.hasExpirationDate = hasExpirationDate
@@ -46,6 +49,7 @@ struct FoodFormDraft {
             storageLocation: item.storageLocationEnum,
             quantity: item.quantity,
             unit: item.unit,
+            barcode: item.barcode,
             purchaseDate: item.purchaseDate,
             expirationDate: item.expirationDate ?? FoodFormDraft.defaultExpirationDate,
             hasExpirationDate: item.expirationDate != nil,
@@ -54,18 +58,82 @@ struct FoodFormDraft {
         )
     }
 
+    init(reusing item: FoodItem) {
+        let shelfLifeDays = item.expirationDate.map {
+            max(
+                0,
+                Calendar.current.dateComponents(
+                    [.day],
+                    from: Calendar.current.startOfDay(for: item.purchaseDate),
+                    to: Calendar.current.startOfDay(for: $0)
+                ).day ?? item.categoryEnum.defaultShelfLifeDays
+            )
+        }
+        let purchaseDate = Date()
+        self.init(
+            name: item.name,
+            category: item.categoryEnum,
+            storageLocation: item.storageLocationEnum,
+            quantity: item.quantity,
+            unit: item.unit,
+            barcode: item.barcode,
+            purchaseDate: purchaseDate,
+            expirationDate: Calendar.current.date(
+                byAdding: .day,
+                value: shelfLifeDays ?? item.categoryEnum.defaultShelfLifeDays,
+                to: purchaseDate
+            ) ?? FoodFormDraft.defaultExpirationDate,
+            hasExpirationDate: item.expirationDate != nil,
+            photoData: item.photoData,
+            notes: item.notes
+        )
+    }
+
     init(historyRecord: HistoryRecord) {
+        let shelfLifeDays = historyRecord.expirationDate.map {
+            max(
+                0,
+                Calendar.current.dateComponents(
+                    [.day],
+                    from: Calendar.current.startOfDay(for: historyRecord.purchaseDate),
+                    to: Calendar.current.startOfDay(for: $0)
+                ).day ?? historyRecord.categoryEnum.defaultShelfLifeDays
+            )
+        }
+        let purchaseDate = Date()
         self.init(
             name: historyRecord.foodName,
             category: historyRecord.categoryEnum,
             storageLocation: StorageLocation(rawValue: historyRecord.storageLocation) ?? .fridge,
             quantity: historyRecord.quantity,
             unit: historyRecord.unit,
-            purchaseDate: historyRecord.purchaseDate,
-            expirationDate: historyRecord.expirationDate ?? FoodFormDraft.defaultExpirationDate,
+            barcode: historyRecord.barcode,
+            purchaseDate: purchaseDate,
+            expirationDate: Calendar.current.date(
+                byAdding: .day,
+                value: shelfLifeDays ?? historyRecord.categoryEnum.defaultShelfLifeDays,
+                to: purchaseDate
+            ) ?? FoodFormDraft.defaultExpirationDate,
             hasExpirationDate: historyRecord.expirationDate != nil,
             photoData: historyRecord.photoData,
             notes: historyRecord.notes
+        )
+    }
+
+    init(shoppingItem: ShoppingItem) {
+        let purchaseDate = Date()
+        self.init(
+            name: shoppingItem.name,
+            category: shoppingItem.categoryEnum,
+            quantity: shoppingItem.preferredQuantity,
+            unit: shoppingItem.unit,
+            purchaseDate: purchaseDate,
+            expirationDate: Calendar.current.date(
+                byAdding: .day,
+                value: shoppingItem.categoryEnum.defaultShelfLifeDays,
+                to: purchaseDate
+            ) ?? FoodFormDraft.defaultExpirationDate,
+            hasExpirationDate: true
         )
     }
 
@@ -76,6 +144,7 @@ struct FoodFormDraft {
             storageLocation: storageLocation,
             quantity: quantity,
             unit: unit,
+            barcode: barcode,
             purchaseDate: purchaseDate,
             expirationDate: hasExpirationDate ? expirationDate : nil,
             photoData: photoData,
@@ -89,6 +158,7 @@ struct FoodFormDraft {
         item.storageLocation = storageLocation.rawValue
         item.quantity = quantity
         item.unit = unit
+        item.barcode = barcode
         item.purchaseDate = purchaseDate
         item.expirationDate = hasExpirationDate ? expirationDate : nil
         item.photoData = photoData
@@ -96,8 +166,50 @@ struct FoodFormDraft {
         item.updatedAt = Date()
     }
 
-    private static var defaultExpirationDate: Date {
+    static var defaultExpirationDate: Date {
         Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+    }
+}
+
+struct FoodTemplate: Identifiable {
+    let id: String
+    let draft: FoodFormDraft
+    let useCount: Int
+    let lastUsedAt: Date
+}
+
+enum FoodTemplateBuilder {
+    static func templates(
+        from records: [HistoryRecord],
+        limit: Int = 5
+    ) -> [FoodTemplate] {
+        let grouped = Dictionary(grouping: records) {
+            $0.foodName.trimmingCharacters(in: .whitespacesAndNewlines).folding(
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: .current
+            )
+        }
+
+        return grouped.compactMap { key, records -> FoodTemplate? in
+            guard !key.isEmpty,
+                  let latest = records.max(by: { $0.archivedAt < $1.archivedAt }) else {
+                return nil
+            }
+            return FoodTemplate(
+                id: key,
+                draft: FoodFormDraft(historyRecord: latest),
+                useCount: records.count,
+                lastUsedAt: latest.archivedAt
+            )
+        }
+        .sorted {
+            if $0.useCount != $1.useCount {
+                return $0.useCount > $1.useCount
+            }
+            return $0.lastUsedAt > $1.lastUsedAt
+        }
+        .prefix(max(0, limit))
+        .map { $0 }
     }
 }
 
@@ -109,6 +221,7 @@ final class AddEditFoodViewModel: ObservableObject {
     @Published var storageLocation: StorageLocation = .fridge
     @Published var quantity: Double = 1
     @Published var unit: String = "item"
+    @Published var barcode: String = ""
     @Published var purchaseDate: Date = Date()
     @Published var expirationDate: Date = Calendar.current.date(byAdding: .day, value: 7, to: Date())!
     @Published var hasExpirationDate: Bool = true
@@ -205,6 +318,7 @@ final class AddEditFoodViewModel: ObservableObject {
             storageLocation: storageLocation,
             quantity: quantity,
             unit: unit,
+            barcode: barcode,
             purchaseDate: purchaseDate,
             expirationDate: expirationDate,
             hasExpirationDate: hasExpirationDate,
@@ -213,12 +327,13 @@ final class AddEditFoodViewModel: ObservableObject {
         )
     }
 
-    private func apply(_ draft: FoodFormDraft) {
+    func apply(_ draft: FoodFormDraft) {
         name = draft.name
         category = draft.category
         storageLocation = draft.storageLocation
         quantity = draft.quantity
         unit = draft.unit
+        barcode = draft.barcode
         purchaseDate = draft.purchaseDate
         expirationDate = draft.expirationDate
         hasExpirationDate = draft.hasExpirationDate

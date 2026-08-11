@@ -1,11 +1,11 @@
 import SwiftUI
 
 struct FoodDetailView: View {
-    private let minimumQuantity = 0.1
     private let maximumQuantity = 9_999.0
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var feedbackCenter: AppFeedbackCenter
 
     let item: FoodItem
 
@@ -56,17 +56,6 @@ struct FoodDetailView: View {
                     message: Text("alert.deleteMessage"),
                     primaryButton: .destructive(Text("button.delete"), action: deleteItem),
                     secondaryButton: .cancel(Text("button.cancel"))
-                )
-            case .shoppingAdded(let name):
-                Alert(
-                    title: Text("shopping.addedTitle"),
-                    message: Text(
-                        String(
-                            format: NSLocalizedString("shopping.addedFormat", comment: ""),
-                            name
-                        )
-                    ),
-                    dismissButton: .default(Text("button.ok"))
                 )
             case .error(let message):
                 Alert(
@@ -144,10 +133,13 @@ struct FoodDetailView: View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: AppSpacing.medium), GridItem(.flexible(), spacing: AppSpacing.medium)], spacing: AppSpacing.medium) {
             DetailRow(label: "field.category", value: "\(item.categoryEnum.emoji) \(item.categoryEnum.localizedName)")
             DetailRow(label: "field.location", value: "\(item.storageLocationEnum.emoji) \(item.storageLocationEnum.localizedName)")
-            DetailRow(label: "field.quantity", value: "\(item.quantity.formatted()) \(item.unit)")
+            DetailRow(label: "field.quantity", value: "\(item.quantity.formatted()) \(item.unit.localizedFoodUnit)")
             DetailRow(label: "field.purchaseDate", value: item.purchaseDate.formatted(date: .abbreviated, time: .omitted))
             if let exp = item.expirationDate {
                 DetailRow(label: "field.expirationDate", value: exp.formatted(date: .abbreviated, time: .omitted))
+            }
+            if !item.barcode.isEmpty {
+                DetailRow(label: "field.barcode", value: item.barcode)
             }
         }
     }
@@ -163,7 +155,7 @@ struct FoodDetailView: View {
                     .font(.headline)
                 Spacer()
                 Button {
-                    adjustQuantity(by: -1)
+                    adjustQuantity(by: -quantityStep)
                 } label: {
                     Image(systemName: "minus.circle.fill")
                         .font(.title2)
@@ -172,12 +164,12 @@ struct FoodDetailView: View {
                 .disabled(item.quantity <= minimumQuantity)
                 .accessibilityLabel("button.decreaseQuantity")
 
-                Text("\(item.quantity.formatted()) \(item.unit)")
+                Text("\(item.quantity.formatted()) \(item.unit.localizedFoodUnit)")
                     .font(.headline)
                     .frame(minWidth: 72, alignment: .center)
 
                 Button {
-                    adjustQuantity(by: 1)
+                    adjustQuantity(by: quantityStep)
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.title2)
@@ -265,7 +257,12 @@ struct FoodDetailView: View {
     private func addToShoppingList() {
         do {
             try ShoppingRepository(context: modelContext).add(from: item)
-            activeAlert = .shoppingAdded(item.name)
+            feedbackCenter.show(
+                message: String(
+                    format: NSLocalizedString("shopping.addedFormat", comment: ""),
+                    item.name
+                )
+            )
         } catch {
             activeAlert = .error(error.localizedDescription)
         }
@@ -279,6 +276,7 @@ struct FoodDetailView: View {
         item.updatedAt = Date()
         do {
             try FoodRepository(context: modelContext).save(item)
+            UISelectionFeedbackGenerator().selectionChanged()
         } catch {
             item.quantity = previousQuantity
             item.updatedAt = previousUpdatedAt
@@ -288,9 +286,29 @@ struct FoodDetailView: View {
 
     private func archive(as status: FoodStatus) {
         let repository = FoodRepository(context: modelContext)
+        let snapshot = FoodItemSnapshot(item: item)
         do {
-            try repository.archiveItem(item, status: status)
+            let record = try repository.archiveItemForUndo(item, status: status)
             NotificationService.shared.refreshSchedule(using: repository)
+            feedbackCenter.showUndo(
+                message: String(
+                    format: NSLocalizedString("feedback.archivedFormat", comment: ""),
+                    snapshot.name,
+                    status.localizedName
+                )
+            ) {
+                do {
+                    try FoodRepository(context: modelContext).restoreArchivedItem(
+                        snapshot,
+                        removing: record
+                    )
+                    NotificationService.shared.refreshSchedule(
+                        using: FoodRepository(context: modelContext)
+                    )
+                } catch {
+                    feedbackCenter.showError(message: error.localizedDescription)
+                }
+            }
             dismiss()
         } catch {
             activeAlert = .error(error.localizedDescription)
@@ -299,27 +317,52 @@ struct FoodDetailView: View {
 
     private func deleteItem() {
         let repository = FoodRepository(context: modelContext)
+        let snapshot = FoodItemSnapshot(item: item)
         do {
             try repository.delete(item)
             NotificationService.shared.refreshSchedule(using: repository)
+            feedbackCenter.showUndo(
+                message: String(
+                    format: NSLocalizedString("feedback.deletedFormat", comment: ""),
+                    snapshot.name
+                )
+            ) {
+                do {
+                    try FoodRepository(context: modelContext).restore(snapshot)
+                    NotificationService.shared.refreshSchedule(
+                        using: FoodRepository(context: modelContext)
+                    )
+                } catch {
+                    feedbackCenter.showError(message: error.localizedDescription)
+                }
+            }
             dismiss()
         } catch {
             activeAlert = .error(error.localizedDescription)
         }
     }
+
+    private var quantityStep: Double {
+        selectedUnit.quantityStep
+    }
+
+    private var minimumQuantity: Double {
+        selectedUnit.minimumQuantity
+    }
+
+    private var selectedUnit: FoodUnit {
+        FoodUnit(rawValue: item.unit) ?? .item
+    }
 }
 
 private enum FoodDetailAlert: Identifiable {
     case deleteConfirmation
-    case shoppingAdded(String)
     case error(String)
 
     var id: String {
         switch self {
         case .deleteConfirmation:
             "deleteConfirmation"
-        case .shoppingAdded(let name):
-            "shoppingAdded:\(name)"
         case .error(let message):
             "error:\(message)"
         }
@@ -349,5 +392,6 @@ struct DetailRow: View {
     NavigationStack {
         FoodDetailView(item: FoodItem(name: "Apple", category: .fruit, storageLocation: .fridge))
             .modelContainer(PersistenceController.preview.container)
+            .environmentObject(AppFeedbackCenter())
     }
 }
